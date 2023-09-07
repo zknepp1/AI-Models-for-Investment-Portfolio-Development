@@ -12,8 +12,8 @@ class DataFrameCollection:
 
         #Connecting to my drive to grab the news dataset
         # This will be changed when I store the datasets locally
-        from google.colab import drive
-        drive.mount('/content/drive')
+        #from google.colab import drive
+        #drive.mount('/content/drive')
 
         # List of tickers the class is instructed to retrieve
         self.list_of_tickers = ['OKE','VALE','MSFT','NVDA',
@@ -24,7 +24,6 @@ class DataFrameCollection:
 
         self.dataframes = []
         self.end_date = datetime.now().strftime('%Y-%m-%d')
-        self.news_data = self.retrieve_news_data()
 
     # Computes average rolling windows for a dataframe. Returns dataframe with new columns
     def make_rolling_window(self, dataframe, window_size, size):
@@ -76,17 +75,13 @@ class DataFrameCollection:
             self.dataframes .append(dataframe)
 
 
-
     # This function retrieves the local news dataset
-    def retrieve_news_data(self):
-        df = pd.read_csv('/content/drive/My Drive/news/grouped_with_sentiment.csv')
-        df['date'] = pd.to_datetime(df['clean_dates'], format='%Y/%m/%d')
-        df.set_index('date', inplace=True)
-        return df
+    def save_data(self):
+        path = '/home/zacharyknepp2012/Knepp_OUDSA5900/data/'
+        for idx, df in enumerate(self.dataframes):
+          file_name  =  f"df_{idx}.csv"
+          df.to_csv(path + file_name, index = False)
 
-    # Returns the news dataframe. Returns a pandas dataframe
-    def return_news_data(self):
-        return self.news_data
 
     # Returns the financial data for all tickers specified. Returns a list item
     def return_dataframes(self):
