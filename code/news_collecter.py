@@ -1,3 +1,8 @@
+import pandas as pd
+import pynytimes
+import time
+import requests
+
 #This class is meant to collect news articles from nyt between the years 2000-2023
 # The packages used for this class is pynytimes
 class News_Collector:
@@ -9,19 +14,27 @@ class News_Collector:
         self.headline = []
         self.snippet = []
 
+
+
+
     # Collects all news data since the year 2000
     def collect_all_news(self):
         count = 0
         for i in range(len(self.years)):
           for j in range(len(self.months)):
             try:
+              print('1')
               time.sleep(20)
+              print('2')
               base_url = 'https://api.nytimes.com/svc/archive/v1/' + str(self.years[i]) + '/' + str(self.months[j]) + '.json?api-key=9WZV42GGGa7VnNznPal0BZD427T2KJQC'
+              print('3')
               # Make the API request
+              print('before')
               response = requests.get(base_url)
-              print(response.status_code)
+              print('after')
               # Check if the request was successful
               if response.status_code == 200:
+                print('checkpoint: ', response.status_code)
                 data = response.json()
                 # Extract and print article headlines and snippets
                 for article in data['response']['docs']:
@@ -30,10 +43,16 @@ class News_Collector:
                   self.snippet.append(article['snippet'])
 
               else:
-                print('Error:', response.status_code)
+                print('Error1:', response.status_code)
 
             except:
-              print('Error:' + str(count))
+              print('Error2:' + str(count))
+
+
+
+
+
+
 
     # A function where you can query for a specific topic in nyt database
     def query_news_data(self, topic):
@@ -49,3 +68,11 @@ class News_Collector:
         df = pd.DataFrame({'dt': self.dt, 'headline': self.headline, 'snippet': self.snippet})
         df.to_csv('/content/drive/My Drive/news/newsdata.csv')
         print('Saved data to newsdata.csv')
+
+
+    def return_news_data(self):
+        df = pd.DataFrame({'dt': self.dt, 'headline': self.headline, 'snippet': self.snippet})
+        return df
+
+
+

@@ -24,15 +24,15 @@ import pynytimes
 
 import time
 import re
-import tensorflow as tf
-from keras.models import Sequential
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
-from keras.layers import Embedding,Dense,LSTM,Dropout,Flatten,BatchNormalization,Conv1D,GlobalMaxPooli>
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
-tf.random.set_seed(7)
+#import tensorflow as tf
+#from keras.models import Sequential
+#from sklearn.model_selection import train_test_split
+#from sklearn.preprocessing import MinMaxScaler
+#from sklearn.metrics import mean_squared_error
+#from keras.layers import Embedding,Dense,LSTM,Dropout,Flatten,BatchNormalization,Conv1D,GlobalMaxPooli>
+#from tensorflow.keras.layers import Dense, Dropout
+#from tensorflow.keras.callbacks import EarlyStopping
+#tf.random.set_seed(7)
 
 from dataframe_collector import DataFrameCollection
 from news_collecter import News_Collector
