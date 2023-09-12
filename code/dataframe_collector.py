@@ -16,11 +16,17 @@ class DataFrameCollection:
         #drive.mount('/content/drive')
 
         # List of tickers the class is instructed to retrieve
-        self.list_of_tickers = ['OKE','VALE','MSFT','NVDA',
-                                'AMD','LTHM','ALB','SNPS',
-                                'IRM','T','PAYC','TSLA','KDP',
-                                'COIN','SNOW','AMZN','CRM','GOOGL',
-                                'LMT','^GSPC']
+        #self.list_of_tickers = ['OKE','VALE','MSFT','NVDA',
+        #                        'AMD','LTHM','ALB','SNPS',
+        #                        'IRM','T','PAYC','TSLA','KDP',
+        #                        'COIN','SNOW','AMZN','CRM','GOOGL',
+        #                        'LMT','^GSPC']
+
+        self.list_of_tickers = ['OKE','MSFT','NVDA',
+                                'AMD',
+                                'PAYC',
+                                'AMZN','GOOGL',
+                                '^GSPC']
 
         self.dataframes = []
         self.end_date = datetime.now().strftime('%Y-%m-%d')

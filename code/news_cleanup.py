@@ -1,3 +1,17 @@
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+from nltk.util import bigrams, trigrams
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+nltk.download("punkt")
+nltk.download("stopwords")
+nltk.download("wordnet")
+nltk.download('vader_lexicon')
+
+
+
 #This class takes the previously pulled news data and cleans the text data for analysis
 class Text_Cleaner:
     def __init__(self, news_data):

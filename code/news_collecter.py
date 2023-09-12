@@ -6,15 +6,13 @@ import requests
 #This class is meant to collect news articles from nyt between the years 2000-2023
 # The packages used for this class is pynytimes
 class News_Collector:
-    def __init__(self):
+    def __init__(self, start_year, end_year):
         self.months = list(range(1, 13))
-        self.years = list(range(2000, 2023))
+        self.years = list(range(start_year, end_year))
 
         self.dt = []
         self.headline = []
         self.snippet = []
-
-
 
 
     # Collects all news data since the year 2000
@@ -23,18 +21,12 @@ class News_Collector:
         for i in range(len(self.years)):
           for j in range(len(self.months)):
             try:
-              print('1')
-              time.sleep(20)
-              print('2')
+              time.sleep(15)
               base_url = 'https://api.nytimes.com/svc/archive/v1/' + str(self.years[i]) + '/' + str(self.months[j]) + '.json?api-key=9WZV42GGGa7VnNznPal0BZD427T2KJQC'
-              print('3')
               # Make the API request
-              print('before')
               response = requests.get(base_url)
-              print('after')
               # Check if the request was successful
               if response.status_code == 200:
-                print('checkpoint: ', response.status_code)
                 data = response.json()
                 # Extract and print article headlines and snippets
                 for article in data['response']['docs']:
@@ -50,10 +42,6 @@ class News_Collector:
 
 
 
-
-
-
-
     # A function where you can query for a specific topic in nyt database
     def query_news_data(self, topic):
         apikey = "qMNbG2buoVVqqAu7ygcTkE4dBtx9x1l8"
@@ -62,6 +50,7 @@ class News_Collector:
         # searching for specific articles
         articles = nytapi.article_search(query = topic, results = 5000, options = {
           "sort": "relevance"}, dates = {"begin": datetime.datetime(2000, 1, 1),"end": datetime.datetime(2023, 12, 31)})
+
 
     # Saves the dataframe locally
     def save_all_news_data(self):
