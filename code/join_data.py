@@ -1,5 +1,5 @@
 import pandas as pd
-
+import re
 
 class Join_Data:
       def __init__(self, financial_data, news_data):
@@ -11,11 +11,31 @@ class Join_Data:
         self.dfs_with_timesteps = []
 
 
+
+      def view_df(self, num):
+        if num ==  1:
+          print(self.financial_df[0].head())
+        elif num == 2:
+          print(self.news_df.head())
+        elif  num == 3:
+          print(self.market_df.head())
+
+
+
       def pop_market_df(self):
         # Remove the last item which is the sp500
         market_copy = self.financial_df.pop()
-        print(market_copy.head())
         df = pd.DataFrame()
+
+        date_pattern = r'\d\d\d\d-\d\d-\d\d'
+        dates = market_copy['date']
+        print(dates[0:5])
+        new_dates = []
+        for i in dates:
+          date_found = re.findall(date_pattern, str(i))
+          new_dates.append(str(date_found[0]))
+
+        df['clean_dates'] = new_dates
         df['market_open'] = market_copy['Open']
         df['market_high'] = market_copy['High']
         df['market_low'] = market_copy['Low']
@@ -97,14 +117,33 @@ class Join_Data:
 
       def combine_dataframes(self):
         # Join based on index
-        print('news df: ')
-        print(self.news_df.info())
-        print(self.news_df.describe())
         for df in self.financial_df:
-          joined_df = df.join(self.news_df)
-          joined_df_two = joined_df.join(self.market_df)
-          self.combined_dfs.append(joined_df_two)
-        #return self.combined_dfs
+          date_pattern = r'\d\d\d\d-\d\d-\d\d'
+          dates = df['date']
+          new_dates = []
+          for i in dates:
+            date_found = re.findall(date_pattern, str(i))
+            new_dates.append(str(date_found[0]))
+          df['clean_dates'] = new_dates
+
+        #print('news df: ')
+        #print(self.news_df.head())
+
+        #print('finances')
+        #print(self.financial_df[0].head())
+
+        #print('market')
+        #print(self.market_df.head())
+
+        for df in self.financial_df:
+          two_df = pd.merge(df, self.market_df, on='clean_dates', how='outer')
+          merged_df = pd.merge(two_df, self.news_df, on='clean_dates', how='outer')
+          merged_df = merged_df.dropna()
+          self.combined_dfs.append(merged_df)
+
+        print(self.combined_dfs[0].tail(30))
+        print(self.combined_dfs[0].shape)
+        return self.combined_dfs
 
 
       def loop_time_step_creation(self):
@@ -112,3 +151,6 @@ class Join_Data:
           ts_df = self.make_time_steps(df)
           self.dfs_with_timesteps.append(ts_df)
         return self.dfs_with_timesteps
+
+
+

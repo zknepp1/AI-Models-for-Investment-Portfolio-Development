@@ -83,7 +83,7 @@ class DataFrameCollection:
 
     # This function retrieves the local news dataset
     def save_data(self):
-        path = '/home/zacharyknepp2012/Knepp_OUDSA5900/data/'
+        path = '/home/zacharyknepp2012/Knepp_OUDSA5900/fdata/'
         for idx, df in enumerate(self.dataframes):
           file_name  =  f"df_{idx}.csv"
           df.to_csv(path + file_name, index = False)
