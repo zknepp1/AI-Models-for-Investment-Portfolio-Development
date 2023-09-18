@@ -29,7 +29,7 @@ class Join_Data:
 
         date_pattern = r'\d\d\d\d-\d\d-\d\d'
         dates = market_copy['date']
-        print(dates[0:5])
+
         new_dates = []
         for i in dates:
           date_found = re.findall(date_pattern, str(i))
@@ -126,23 +126,11 @@ class Join_Data:
             new_dates.append(str(date_found[0]))
           df['clean_dates'] = new_dates
 
-        #print('news df: ')
-        #print(self.news_df.head())
-
-        #print('finances')
-        #print(self.financial_df[0].head())
-
-        #print('market')
-        #print(self.market_df.head())
-
         for df in self.financial_df:
           two_df = pd.merge(df, self.market_df, on='clean_dates', how='outer')
           merged_df = pd.merge(two_df, self.news_df, on='clean_dates', how='outer')
           merged_df = merged_df.dropna()
           self.combined_dfs.append(merged_df)
-
-        print(self.combined_dfs[0].tail(30))
-        print(self.combined_dfs[0].shape)
         return self.combined_dfs
 
 

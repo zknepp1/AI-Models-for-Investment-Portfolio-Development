@@ -1,12 +1,28 @@
-from keras.optimizers.optimizer import learning_rate_schedule
-from keras.activations import activation_layers
+#from keras.optimizers.optimizer import learning_rate_schedule
+#from keras.activations import activation_layers
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import LSTM, GRU, Dense, Bidirectional
+import tensorflow as tf
+from tensorflow import keras
+from keras.models import Sequential
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+from keras.layers import Embedding,Dense,LSTM,Dropout,Flatten,BatchNormalization,Input, Attention,Concatenate
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
 
+
+
+tf.random.set_seed(7)
 
 class Model_Builder:
     def __init__(self, df):
-        self.df = df
+        self.dfs = df
         self.y_train_nn = None
         self.y_test_nn = None
         self.x_train_reshaped = None
@@ -17,11 +33,14 @@ class Model_Builder:
 
 
     def train_test_scale(self):
-        copy = dfs_ready[0].copy()
+        copy = self.dfs[0].copy()
         copy.dropna(inplace=True)
 
         train = copy.iloc[:-90]
         test = copy.iloc[-90:]
+
+        print('Train shape: ', train.shape)
+        print('Test shape: ', test.shape)
 
         X_train = train.iloc[:, 1:].values
         Y_train = train['Target'].values
@@ -47,7 +66,7 @@ class Model_Builder:
         X_test_scaled = scaler.transform(x_test_nn)
 
         # Example data: n samples, each with m features
-        m = 18
+        m = 16
         timesteps = 6
 
         # Reshape the data to match neural network input shape
@@ -58,11 +77,11 @@ class Model_Builder:
     def build_and_optimize_models(self):
         early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
         epochs = [100]
-        lstm_units = [5, 50]
+        lstm_units = [5]
         #optimizers = ['Adam','RMSprop']
         optimizers = ['Adam']
 
-        input_shape = (6, 18)
+        input_shape = (6, 16)
 
         model = Sequential()
         model.add(LSTM(units=100, return_sequences=False, input_shape=input_shape))
@@ -70,7 +89,7 @@ class Model_Builder:
         model.add(Dense(units=500, activation='swish'))
         model.add(Dense(units=dense_units, activation='swish'))
         model.compile(optimizer='Adam', loss='mean_squared_error')
-        hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=5, batch_size=32, verbose=1)
+        hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=10, batch_size=2, verbose=1)
         predictions = model.predict(self.x_test_reshaped)
         mse = mean_squared_error(self.y_test_nn, predictions)
 
@@ -92,12 +111,15 @@ class Model_Builder:
                     # Create a Sequential model
                     model = Sequential()
                     #model.add(LSTM(units=lstm_unit, return_sequences=False, input_shape=input_shape))
-                    model.add(Bidirectional(LSTM(units=lstm_unit, return_sequences=False), input_shape=input_shape))
-                    #model.add(Bidirectional(LSTM(units=lstm_unit, return_sequences=False)))
+                    model.add(Dense(units=30, activation='swish'))
+                    model.add(Dense(units=50, activation='swish'))
                     model.add(Dense(units=1, activation='swish'))# the output layer
                     model.compile(optimizer=opt, loss='mean_squared_error')
                     hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=epoch, validation_data=(self.x_test_reshaped, self.y_test_nn), batch_size=1, verbose=1, callbacks=[early_stopping])
                     predictions = model.predict(self.x_test_reshaped)
+                    print(predictions)
+                    print(self.y_test_nn)
+
                     mse = mean_squared_error(self.y_test_nn, predictions)
 
                     print("MSE: ", mse)
@@ -130,7 +152,7 @@ class Model_Builder:
         plt.plot(preds, label='Predictions')
         plt.plot(self.y_test_nn, label='Actual')
         plt.legend()
-        plt.show()
+        plt.show(block=True)
 
 
 
