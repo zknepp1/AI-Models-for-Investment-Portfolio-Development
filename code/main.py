@@ -36,7 +36,9 @@ df_list = []
 
 
 
-
+# Trying to read in the financial data
+# If the financial data exists locally, it reads in the files (fast way)
+# If the financial data does not exist, it retrieves the data and saves it locally
 try:
   for filename in os.listdir(financial_data_path):
     if filename.endswith('.csv'):
@@ -57,7 +59,9 @@ except:
 
 
 
-
+# Trying to read in the news data
+# If the news data exists locally, it reads in the files (fast way)
+# If the news data does not exist, it retrieves the data and saves it locally
 try:
   news_data_path = '/home/zacharyknepp2012/Knepp_OUDSA5900/ndata/news_data.csv'
   clean_news_data = pd.read_csv(news_data_path)
@@ -248,28 +252,69 @@ for day in text_by_day:
 
 
 
-print(rate_cuts_list)
+
+clean_news_data['recession'] = recession_list
+
+clean_news_data['fomc'] = fomc_list
+clean_news_data['inflation'] = inflation_list
+clean_news_data['cpi'] = cpi_list
+clean_news_data['unemployment'] = unemployment_list
+clean_news_data['gdp'] = gdp_list
+clean_news_data['bubble'] = bubble_list
+clean_news_data['bear'] = bear_list
+clean_news_data['bearish'] = bearish_list
+clean_news_data['bull'] = bull_list
+clean_news_data['bullish'] = bullish_list
+clean_news_data['acquires'] = acquires_list
+clean_news_data['acquisition'] = acquisition_list
+clean_news_data['merger'] = merger_list
+clean_news_data['war'] = war_list
+clean_news_data['vix'] = vix_list
+clean_news_data['volatility'] = volatility_list
 
 
 
 
 
-#joiner = Join_Data(df_list, clean_news_data)
-#joiner.pop_market_df()
-#joiner.combine_dataframes()
-#dfs_ready = joiner.loop_time_step_creation()
-
-
-#for df in dfs_ready:
-#  print(df.shape)
-#  df = df.dropna()
-#  print(df.shape)
 
 
 
-#builder = Model_Builder(dfs_ready)
-#builder.train_test_scale()
-#builder.build_and_optimize_models()
+
+
+
+
+print()
+print()
+
+
+print(clean_news_data.shape)
+
+joiner = Join_Data(df_list, clean_news_data)
+joiner.pop_market_df()
+joiner.combine_dataframes()
+dfs_ready = joiner.loop_time_step_creation()
+
+
+
+print()
+print()
+print(dfs_ready[0])
+print()
+print()
+
+
+
+
+for df in dfs_ready:
+  print(df.shape)
+  df = df.dropna()
+  print(df.shape)
+
+
+
+builder = Model_Builder(dfs_ready)
+builder.train_test_scale()
+builder.build_and_optimize_models()
 #builder.plot_best_model_results()
 
 

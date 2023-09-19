@@ -113,6 +113,7 @@ class Model_Builder:
                     #model.add(LSTM(units=lstm_unit, return_sequences=False, input_shape=input_shape))
                     model.add(Dense(units=30, activation='swish'))
                     model.add(Dense(units=50, activation='swish'))
+                    model.add(Dense(units=20, activation='swish'))
                     model.add(Dense(units=1, activation='swish'))# the output layer
                     model.compile(optimizer=opt, loss='mean_squared_error')
                     hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=epoch, validation_data=(self.x_test_reshaped, self.y_test_nn), batch_size=1, verbose=1, callbacks=[early_stopping])

@@ -56,6 +56,23 @@ class Join_Data:
                             'Twenty_day_rolling': 'Twenty_day_rolling' + str(i),
                             'cleaned_pos': 'cleaned_pos' + str(i),
                             'cleaned_neg': 'cleaned_neg' + str(i),
+                            'recession': 'recession' + str(i),
+                            'fomc': 'fomc' + str(i),
+                            'inflation': 'inflation' + str(i),
+                            'cpi': 'cpi' + str(i),
+                            'unemployment': 'unemployment' + str(i),
+                            'gdp': 'gdp' + str(i),
+                            'bubble': 'bubble' + str(i),
+                            'bear': 'bear' + str(i),
+                            'bearish': 'bearish' + str(i),
+                            'bull': 'bull' + str(i),
+                            'bullish': 'bullish' + str(i),
+                            'acquires': 'acquires' + str(i),
+                            'acquisition': 'acquisition' + str(i),
+                            'merger': 'merger' + str(i),
+                            'war': 'war' + str(i),
+                            'vix': 'vix' + str(i),
+                            'volatility': 'volatility' + str(i),
                             'market_open': 'market_open' + str(i),
                             'market_high': 'market_high' + str(i),
                             'market_low': 'market_low' + str(i),
@@ -75,9 +92,13 @@ class Join_Data:
         shifted_df_4 = df.shift(4)
         shifted_df_5 = df.shift(5)
 
+
         X = ['Open', 'High', 'Low',
              'Close','Volume','five_day_rolling','ten_day_rolling','twenty_day_rolling',
              'cleaned_pos','cleaned_neg',
+             'recession', 'fomc','inflation','cpi','unemployment','gdp','bubble',
+             'bear','bearish','bull','bullish','acquires','acquisition',
+             'merger','war','vix','volatility',
              'market_open', 'market_high',
              'market_low', 'market_close', 'market_volume',
              'market_twenty_roll']
@@ -85,6 +106,9 @@ class Join_Data:
         X_with_target = ['Target','Open', 'High', 'Low',
              'Close','Volume','five_day_rolling','ten_day_rolling','twenty_day_rolling',
              'cleaned_pos','cleaned_neg',
+             'recession', 'fomc','inflation','cpi','unemployment','gdp','bubble',
+             'bear','bearish','bull','bullish','acquires','acquisition',
+             'merger','war','vix','volatility',
              'market_open', 'market_high', 'market_low', 'market_close',
              'market_volume', 'market_twenty_roll']
 
@@ -131,6 +155,11 @@ class Join_Data:
           merged_df = pd.merge(two_df, self.news_df, on='clean_dates', how='outer')
           merged_df = merged_df.dropna()
           self.combined_dfs.append(merged_df)
+
+        print()
+        print('join_data.py')
+        print(self.combined_dfs[0])
+
         return self.combined_dfs
 
 
