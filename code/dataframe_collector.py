@@ -8,7 +8,7 @@ import yfinance as yf
 
 # This class will be used to retrieve the financial data, and news data
 class DataFrameCollection:
-    def __init__(self):
+    def __init__(self, tickers):
 
         #Connecting to my drive to grab the news dataset
         # This will be changed when I store the datasets locally
@@ -22,12 +22,12 @@ class DataFrameCollection:
         #                        'COIN','SNOW','AMZN','CRM','GOOGL',
         #                        'LMT','^GSPC']
 
-        self.list_of_tickers = ['OKE','MSFT','NVDA',
-                                'AMD',
-                                'PAYC',
-                                'AMZN','GOOGL',
-                                '^GSPC']
-
+       # self.list_of_tickers = ['OKE','MSFT','NVDA',
+       #                         'AMD',
+       #                         'PAYC',
+       #                         'AMZN','GOOGL',
+       #                         '^GSPC']
+        self.list_of_tickers = tickers
         self.dataframes = []
         self.end_date = datetime.now().strftime('%Y-%m-%d')
 

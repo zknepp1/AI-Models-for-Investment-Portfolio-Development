@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import precision_score
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
 
 import nltk
 from nltk.corpus import stopwords
@@ -29,11 +30,30 @@ from join_data import Join_Data
 from model_builder import Model_Builder
 
 
+# Check if the folder exists, and if not, create it
+def check_folder_existence(folder_path):
+  if not os.path.exists(folder_path):
+    os.makedirs(folder_path)
+    print(f"Folder '{folder_path}' created.")
+  else:
+    print(f"Folder '{folder_path}' already exists.")
+
+
 
 #getting financial data
 financial_data_path = '/home/zacharyknepp2012/Knepp_OUDSA5900/fdata'
-df_list = []
+news_data_path = '/home/zacharyknepp2012/Knepp_OUDSA5900/ndata'
+models_path = '/home/zacharyknepp2012/Knepp_OUDSA5900/models'
 
+check_folder_existence(financial_data_path)
+check_folder_existence(news_data_path)
+check_folder_existence(models_path)
+
+
+
+
+df_list = []
+tickers = ['OKE','MSFT','NVDA','AMD','PAYC','AMZN','GOOGL','^GSPC']
 
 
 # Trying to read in the financial data
@@ -48,7 +68,7 @@ try:
   print('Try statement worked')
 
 except:
-  collection = DataFrameCollection()
+  collection = DataFrameCollection(tickers)
   collection.retrieve_financial_data()
   collection.save_data()
   df_list = collection.return_dataframes()
@@ -275,33 +295,10 @@ clean_news_data['volatility'] = volatility_list
 
 
 
-
-
-
-
-
-
-
-
-print()
-print()
-
-
-print(clean_news_data.shape)
-
 joiner = Join_Data(df_list, clean_news_data)
 joiner.pop_market_df()
 joiner.combine_dataframes()
 dfs_ready = joiner.loop_time_step_creation()
-
-
-
-print()
-print()
-print(dfs_ready[0])
-print()
-print()
-
 
 
 
@@ -312,11 +309,36 @@ for df in dfs_ready:
 
 
 
-builder = Model_Builder(dfs_ready)
-builder.train_test_scale()
-builder.build_and_optimize_models()
-#builder.plot_best_model_results()
 
+OKE_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/OKEmodel.h5')
+
+try:
+  OKE_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/OKEmodel.h5')
+  MSFT_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/MSFTmodel.h5')
+  NVDA_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/NVDAmodel.h5')
+  AMD_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/AMDmodel.h5')
+  PAYC_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/PAYCmodel.h5')
+  AMZN_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/AMZNmodel.h5')
+  GOOGL_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/GOOGLmodel.h5')
+except:
+  list_of_models = []
+  list_of_mse = []
+
+  count = 0
+  for df in dfs_ready:
+    builder = Model_Builder(df)
+    builder.train_test_scale()
+    builder.build_and_optimize_models()
+    model = builder.return_best_model()
+    mse = builder.return_best_mse()
+    model.save('/home/zacharyknepp2012/Knepp_OUDSA5900/models/' + str(tickers[count]) + 'model.h5')
+    list_of_models.append(model)
+    list_of_mse.append(mse)
+    count += 1
+
+
+#for i, j in zip(list_of_mse, tickers):
+#  print('best MSE for ', j, ' = ', i)
 
 
 
@@ -324,6 +346,7 @@ builder.build_and_optimize_models()
 
 print('THE PROGRAM HAS FINISHED EXECUTING! YOU BETTER HAVE A NICE DAY')
 print('OR ELSE... >:)')
+
 
 
 

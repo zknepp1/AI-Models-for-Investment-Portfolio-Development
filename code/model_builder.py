@@ -15,6 +15,10 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
+from tensorflow.keras.layers import GRU, Dense
+
+
 
 
 
@@ -22,7 +26,7 @@ tf.random.set_seed(7)
 
 class Model_Builder:
     def __init__(self, df):
-        self.dfs = df
+        self.df = df
         self.y_train_nn = None
         self.y_test_nn = None
         self.x_train_reshaped = None
@@ -33,7 +37,7 @@ class Model_Builder:
 
 
     def train_test_scale(self):
-        copy = self.dfs[0].copy()
+        copy = self.df.copy()
         copy.dropna(inplace=True)
 
         train = copy.iloc[:-90]
@@ -66,7 +70,7 @@ class Model_Builder:
         X_test_scaled = scaler.transform(x_test_nn)
 
         # Example data: n samples, each with m features
-        m = 16
+        m = 33
         timesteps = 6
 
         # Reshape the data to match neural network input shape
@@ -75,19 +79,18 @@ class Model_Builder:
 
 
     def build_and_optimize_models(self):
-        early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         epochs = [100]
-        lstm_units = [5]
-        #optimizers = ['Adam','RMSprop']
-        optimizers = ['Adam']
-
-        input_shape = (6, 16)
+        lstm_units1 = [4]
+        lstm_units2 = [4,8]
+        input_shape = (6, 33)
 
         model = Sequential()
         model.add(LSTM(units=100, return_sequences=False, input_shape=input_shape))
-        dense_units = 1  # Number of units in the output layer
-        model.add(Dense(units=500, activation='swish'))
-        model.add(Dense(units=dense_units, activation='swish'))
+        # Add a GRU layer
+        #model.add(GRU(units=64, activation='tanh', return_sequences=True, input_shape=input_shape))
+        model.add(Dense(units=100, activation='swish'))
+        model.add(Dense(units=1, activation='swish'))
         model.compile(optimizer='Adam', loss='mean_squared_error')
         hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=10, batch_size=2, verbose=1)
         predictions = model.predict(self.x_test_reshaped)
@@ -99,40 +102,32 @@ class Model_Builder:
         self.best_mse = mse
 
         for epoch in epochs:
-            for opt in optimizers:
-                for lstm_unit in lstm_units:
+            for lstm_unit1 in lstm_units1:
+                for lstm_unit2 in lstm_units2:
                     print()
-                    print("Epochs: ", epoch)
-                    print('Optimizer: ', opt)
-                    print("Batch size: ", 1)
-                    print("LSTM units: ", lstm_unit)
+                    print("LSTM unit 1: ", lstm_unit1)
+                    print("LSTM unit 2: ", lstm_unit2)
                     print()
 
                     # Create a Sequential model
                     model = Sequential()
-                    #model.add(LSTM(units=lstm_unit, return_sequences=False, input_shape=input_shape))
-                    model.add(Dense(units=30, activation='swish'))
-                    model.add(Dense(units=50, activation='swish'))
-                    model.add(Dense(units=20, activation='swish'))
+                    model.add(LSTM(units=lstm_unit1, return_sequences=True, input_shape=input_shape))
+                    model.add(Dropout(0.2))
+                    model.add(LSTM(units=lstm_unit2, return_sequences=True))
+                    model.add(Dropout(0.2))
+                    model.add(Dense(units=100, activation='swish'))
                     model.add(Dense(units=1, activation='swish'))# the output layer
-                    model.compile(optimizer=opt, loss='mean_squared_error')
+                    model.compile(optimizer='Adam', loss='mean_squared_error')
                     hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=epoch, validation_data=(self.x_test_reshaped, self.y_test_nn), batch_size=1, verbose=1, callbacks=[early_stopping])
                     predictions = model.predict(self.x_test_reshaped)
-                    print(predictions)
-                    print(self.y_test_nn)
 
-                    mse = mean_squared_error(self.y_test_nn, predictions)
+                    # Assuming predicted_values is a numpy array of shape (num_examples, num_time_steps)
+                    average_predictions = np.mean(predictions, axis=1)
+                    mse = mean_squared_error(self.y_test_nn, average_predictions)
 
                     print("MSE: ", mse)
                     # Determine the number of epochs the model trained for
                     num_epochs_used = len(hist.history['val_loss'])
-
-                    # Apply dropout after determining the optimal number of epochs
-                    model.add(Dropout(0.5))  # Example dropout rat
-
-                    self.plot_predictions(predictions)
-
-
 
                     if mse < self.best_mse:
                         self.best_model = model
