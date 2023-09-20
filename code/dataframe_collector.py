@@ -8,28 +8,12 @@ import yfinance as yf
 
 # This class will be used to retrieve the financial data, and news data
 class DataFrameCollection:
-    def __init__(self, tickers):
-
-        #Connecting to my drive to grab the news dataset
-        # This will be changed when I store the datasets locally
-        #from google.colab import drive
-        #drive.mount('/content/drive')
-
-        # List of tickers the class is instructed to retrieve
-        #self.list_of_tickers = ['OKE','VALE','MSFT','NVDA',
-        #                        'AMD','LTHM','ALB','SNPS',
-        #                        'IRM','T','PAYC','TSLA','KDP',
-        #                        'COIN','SNOW','AMZN','CRM','GOOGL',
-        #                        'LMT','^GSPC']
-
-       # self.list_of_tickers = ['OKE','MSFT','NVDA',
-       #                         'AMD',
-       #                         'PAYC',
-       #                         'AMZN','GOOGL',
-       #                         '^GSPC']
+    def __init__(self, tickers, startdate, enddate):
         self.list_of_tickers = tickers
         self.dataframes = []
-        self.end_date = datetime.now().strftime('%Y-%m-%d')
+        self.start_date = startdate
+        self.end_date = enddate
+        #self.end_date = datetime.now().strftime('%Y-%m-%d')
 
     # Computes average rolling windows for a dataframe. Returns dataframe with new columns
     def make_rolling_window(self, dataframe, window_size, size):
@@ -45,7 +29,7 @@ class DataFrameCollection:
     def retrieve_financial_data(self):
         for i in self.list_of_tickers:
             data = yf.Ticker(i)
-            hist = data.history(start='2000-01-01',end=self.end_date)
+            hist = data.history(start=self.start_date, end=self.end_date)
             dataframe = pd.DataFrame(hist)
 
             dataframe['date'] = dataframe.index

@@ -1,3 +1,5 @@
+
+
 import numpy as np
 import pandas as pd
 pd.set_option('display.max_columns', None)  # Display all columns
@@ -30,7 +32,7 @@ from join_data import Join_Data
 from model_builder import Model_Builder
 
 
-# Check if the folder exists, and if not, create it
+#function to Check if the folder exists, and if not, create it
 def check_folder_existence(folder_path):
   if not os.path.exists(folder_path):
     os.makedirs(folder_path)
@@ -40,7 +42,8 @@ def check_folder_existence(folder_path):
 
 
 
-#getting financial data
+# Making all the paths im going to store the data.
+# If the folder does not exist, the program will create the folder
 financial_data_path = '/home/zacharyknepp2012/Knepp_OUDSA5900/fdata'
 news_data_path = '/home/zacharyknepp2012/Knepp_OUDSA5900/ndata'
 models_path = '/home/zacharyknepp2012/Knepp_OUDSA5900/models'
@@ -58,7 +61,8 @@ tickers = ['OKE','MSFT','NVDA','AMD','PAYC','AMZN','GOOGL','^GSPC']
 
 # Trying to read in the financial data
 # If the financial data exists locally, it reads in the files (fast way)
-# If the financial data does not exist, it retrieves the data and saves it locally
+# If the financial data does not exist,
+#     it retrieves the data and saves it locally
 try:
   for filename in os.listdir(financial_data_path):
     if filename.endswith('.csv'):
@@ -68,13 +72,12 @@ try:
   print('Try statement worked')
 
 except:
-  collection = DataFrameCollection(tickers)
+  collection = DataFrameCollection(tickers, '2000-1-1', '2023-1-1')
   collection.retrieve_financial_data()
   collection.save_data()
   df_list = collection.return_dataframes()
   print('Went to except statement')
 
-#print(df_list[0].head())
 
 
 
@@ -104,10 +107,7 @@ except:
 
 
 
-#print(clean_news_data)
 text = clean_news_data['cleaned_text']
-
-
 word_list = [word for word in text]
 
 text_by_day = []
@@ -274,7 +274,6 @@ for day in text_by_day:
 
 
 clean_news_data['recession'] = recession_list
-
 clean_news_data['fomc'] = fomc_list
 clean_news_data['inflation'] = inflation_list
 clean_news_data['cpi'] = cpi_list
@@ -310,8 +309,9 @@ for df in dfs_ready:
 
 
 
-OKE_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/OKEmodel.h5')
-
+# Tries to read in the financial models.
+# If they dont exist, The program will build the models
+#      and saved locally for future use
 try:
   OKE_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/OKEmodel.h5')
   MSFT_model = tf.keras.models.load_model('/home/zacharyknepp2012/Knepp_OUDSA5900/models/MSFTmodel.h5')
@@ -337,8 +337,6 @@ except:
     count += 1
 
 
-#for i, j in zip(list_of_mse, tickers):
-#  print('best MSE for ', j, ' = ', i)
 
 
 
