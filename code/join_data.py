@@ -5,44 +5,39 @@ class Join_Data:
       def __init__(self, financial_data, news_data):
         self.financial_df = financial_data
         self.news_df = news_data
-        self.market_df = pd.DataFrame()
+        self.dates = None
+        self.market_df = self.pop_market_df()
+
 
         self.combined_dfs = []
         self.dfs_with_timesteps = []
 
 
-
-      def view_df(self, num):
-        if num ==  1:
-          print(self.financial_df[0].head())
-        elif num == 2:
-          print(self.news_df.head())
-        elif  num == 3:
-          print(self.market_df.head())
-
-
-
       def pop_market_df(self):
         # Remove the last item which is the sp500
         market_copy = self.financial_df.pop()
-        df = pd.DataFrame()
-
         date_pattern = r'\d\d\d\d-\d\d-\d\d'
         dates = market_copy['date']
-
         new_dates = []
         for i in dates:
           date_found = re.findall(date_pattern, str(i))
           new_dates.append(str(date_found[0]))
 
-        df['clean_dates'] = new_dates
-        df['market_open'] = market_copy['Open']
-        df['market_high'] = market_copy['High']
-        df['market_low'] = market_copy['Low']
-        df['market_close'] = market_copy['Close']
-        df['market_volume'] = market_copy['Volume']
-        df['market_twenty_roll'] = market_copy['twenty_day_rolling']
-        self.market_df = df
+        market_open = market_copy['Open']
+        clean_dates = new_dates
+        market_high = market_copy['High']
+        market_low = market_copy['Low']
+        market_close = market_copy['Close']
+        market_volume = market_copy['Volume']
+        market_twenty_roll = market_copy['twenty_day_rolling']
+        df = pd.DataFrame({'clean_dates': clean_dates,
+                           'market_open': market_open,
+                           'market_high': market_high,
+                           'market_low': market_low,
+                           'market_close': market_close,
+                           'market_volume': market_volume,
+                           'market_twenty_roll': market_twenty_roll})
+        return df
 
 
       def column_names(self, i):
@@ -103,7 +98,7 @@ class Join_Data:
              'market_low', 'market_close', 'market_volume',
              'market_twenty_roll']
 
-        X_with_target = ['Target','Open', 'High', 'Low',
+        X_with_target = ['clean_dates','Target','Open', 'High', 'Low',
              'Close','Volume','five_day_rolling','ten_day_rolling','twenty_day_rolling',
              'cleaned_pos','cleaned_neg',
              'recession', 'fomc','inflation','cpi','unemployment','gdp','bubble',
@@ -149,17 +144,11 @@ class Join_Data:
             date_found = re.findall(date_pattern, str(i))
             new_dates.append(str(date_found[0]))
           df['clean_dates'] = new_dates
-
         for df in self.financial_df:
           two_df = pd.merge(df, self.market_df, on='clean_dates', how='outer')
           merged_df = pd.merge(two_df, self.news_df, on='clean_dates', how='outer')
           merged_df = merged_df.dropna()
           self.combined_dfs.append(merged_df)
-
-        print()
-        print('join_data.py')
-        print(self.combined_dfs[0])
-
         return self.combined_dfs
 
 
@@ -168,6 +157,7 @@ class Join_Data:
           ts_df = self.make_time_steps(df)
           self.dfs_with_timesteps.append(ts_df)
         return self.dfs_with_timesteps
+
 
 
 
