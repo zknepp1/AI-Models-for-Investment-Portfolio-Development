@@ -4,17 +4,19 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import re
 import yfinance as yf
-pd.set_option('display.max_columns', None)  # Display all columns
+
 
 # This class will be used to retrieve the financial data, and news data
 class DataFrameCollection:
     def __init__(self, tickers, startdate, enddate):
         self.list_of_tickers = tickers
+        self.dataframes = []
         self.start_date = datetime.strptime(startdate, "%Y-%m-%d")
         self.end_date = datetime.strptime(enddate, "%Y-%m-%d")
-
         self.financial_data = self.retrieve_financial_data()
 
+
+        self.fdata_rolling = []
 
 
     # Computes average rolling windows for a dataframe. Returns dataframe with new columns
@@ -29,12 +31,11 @@ class DataFrameCollection:
 
     # Uses yfinance to go retrieve ticker data
     def retrieve_financial_data(self):
-        dataframes = []
         for i in self.list_of_tickers:
             data = yf.Ticker(i)
             hist = data.history(start=self.start_date, end=self.end_date)
             dataframe = pd.DataFrame(hist)
-            #print(dataframe)
+            print(dataframe)
 
             dataframe['date'] = dataframe.index
             pattern = r'\d\d\d\d-\d\d-\d\d'
@@ -63,11 +64,11 @@ class DataFrameCollection:
             # Right here I am determining What i am trying to predict
             # This is the closing price for the stock 20 days ahead of time
             dataframe4['stock'] = i
-            dataframe4['Target'] = dataframe4['Close'].shift(-20)
-            #dataframe4.dropna(inplace=True)
+            dataframe4['Target'] = dataframe['Close'].shift(-20)
+            dataframe4.dropna(inplace=True)
 
-            dataframes.append(dataframe4)
-        return dataframes
+            self.dataframes 
+
 
     # This function saves the dataframes locally
     def save_data(self):
@@ -85,8 +86,8 @@ class DataFrameCollection:
 
 
 
-#tics = ['AMD', '^GSPC']
-#start = '2020-1-1'
-#end = '2023-6-1'
-#fin = DataFrameCollection(tics, start, end)
-#print(fin.financial_data)
+tics = ['AMD', '^GSPC']
+start = '2020-1-1'
+end = '2023-6-1'
+fin = DataFrameCollection(tics, start, end)
+print(fin.financial_data)

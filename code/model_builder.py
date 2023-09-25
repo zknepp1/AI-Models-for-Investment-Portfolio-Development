@@ -19,11 +19,6 @@ from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 from tensorflow.keras.layers import GRU, Dense
 
 
-
-
-
-tf.random.set_seed(7)
-
 class Model_Builder:
     def __init__(self, df):
         self.df = df
@@ -31,6 +26,18 @@ class Model_Builder:
         self.y_test_nn = None
         self.x_train_reshaped = None
         self.x_test_reshaped = None
+
+
+
+        self.X = ['Open', 'High', 'Low','Close','Volume',
+                  'five_day_rolling','ten_day_rolling','twenty_day_rolling',
+                  'cleaned_pos','cleaned_neg','recession', 'fomc','inflation',
+                  'cpi','unemployment','gdp','bubble','bear','bearish','bull',
+                  'bullish','acquires','acquisition','merger','war','vix','volatility',
+                  'market_open', 'market_high','market_low', 'market_close',
+                  'market_volume','market_twenty_roll']
+
+
 
         self.best_model = None
         self.best_mse = None
@@ -46,9 +53,15 @@ class Model_Builder:
         print('Train shape: ', train.shape)
         print('Test shape: ', test.shape)
 
-        X_train = train.iloc[:, 1:].values
+        X_train = train[self.X].values
         Y_train = train['Target'].values
-        X_test = test.iloc[:, 1:].values
+        print(X_train.shape)
+        print(X_train)
+        print(Y_train.shape)
+        print(Y_train)
+
+
+        X_test = test[self.X].values
         Y_test = test['Target'].values
 
         # Convert to numpy arrays
@@ -71,7 +84,7 @@ class Model_Builder:
 
         # Example data: n samples, each with m features
         m = 33
-        timesteps = 6
+        timesteps = 1
 
         # Reshape the data to match neural network input shape
         self.x_train_reshaped = X_train_scaled.reshape(X_train_scaled.shape[0], timesteps, m)  # Adding an extra dimension for single feature
@@ -81,15 +94,13 @@ class Model_Builder:
     def build_and_optimize_models(self):
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         epochs = [100]
-        lstm_units1 = [4]
-        lstm_units2 = [4,8]
-        input_shape = (6, 33)
+        lstm_units1 = [2,4]
+        lstm_units2 = [8,32,64,128]
+        input_shape = (1, 33)
 
         model = Sequential()
-        model.add(LSTM(units=100, return_sequences=False, input_shape=input_shape))
-        # Add a GRU layer
-        #model.add(GRU(units=64, activation='tanh', return_sequences=True, input_shape=input_shape))
-        model.add(Dense(units=100, activation='swish'))
+        model.add(LSTM(units=10, return_sequences=False, input_shape=input_shape))
+        model.add(Dense(units=10, activation='swish'))
         model.add(Dense(units=1, activation='swish'))
         model.compile(optimizer='Adam', loss='mean_squared_error')
         hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=10, batch_size=2, verbose=1)
