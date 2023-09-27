@@ -39,11 +39,12 @@ class News_Collector:
         for i in range(len(self.years)):
           for j in range(len(self.months)):
             try:
-              time.sleep(15)
-              base_url = 'https://api.nytimes.com/svc/archive/v1/' + str(self.years[i]) + '/' + str(self.months[j]) + '.json?api-key=9WZV42GGGa7VnNznPal0BZD427T2KJQC'
+              time.sleep(20)
+              base_url = 'https://api.nytimes.com/svc/archive/v1/' + str(self.years[i]) + '/' + str(self.months[j]) + '.json?api-key=GwXZGsAX0RQBW1DKCJ0B6n2MtfSCgEnZ'
               # Make the API request
               response = requests.get(base_url)
               # Check if the request was successful
+              print(response)
               if response.status_code == 200:
                 data = response.json()
                 # Extract and print article headlines and snippets

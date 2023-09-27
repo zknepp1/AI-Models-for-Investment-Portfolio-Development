@@ -55,10 +55,10 @@ class Model_Builder:
 
         X_train = train[self.X].values
         Y_train = train['Target'].values
-        print(X_train.shape)
-        print(X_train)
-        print(Y_train.shape)
-        print(Y_train)
+        #print(X_train.shape)
+        #print(X_train)
+        #print(Y_train.shape)
+        #print(Y_train)
 
 
         X_test = test[self.X].values
@@ -94,8 +94,9 @@ class Model_Builder:
     def build_and_optimize_models(self):
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         epochs = [100]
-        lstm_units1 = [2,4]
-        lstm_units2 = [8,32,64,128]
+        lstm_units1 = [128]
+        lstm_units2 = [2,128]
+        lstm_units3 = [128]
         input_shape = (1, 33)
 
         model = Sequential()
@@ -112,12 +113,13 @@ class Model_Builder:
         self.best_model = model
         self.best_mse = mse
 
-        for epoch in epochs:
-            for lstm_unit1 in lstm_units1:
-                for lstm_unit2 in lstm_units2:
+        for lstm_unit1 in lstm_units1:
+            for lstm_unit2 in lstm_units2:
+                for lstm_unit3 in lstm_units3:
                     print()
                     print("LSTM unit 1: ", lstm_unit1)
                     print("LSTM unit 2: ", lstm_unit2)
+                    print("LSTM unit 3: ", lstm_unit3)
                     print()
 
                     # Create a Sequential model
@@ -126,10 +128,12 @@ class Model_Builder:
                     model.add(Dropout(0.2))
                     model.add(LSTM(units=lstm_unit2, return_sequences=True))
                     model.add(Dropout(0.2))
+                    model.add(LSTM(units=lstm_unit3, return_sequences=True))
+                    model.add(Dropout(0.2))
                     model.add(Dense(units=100, activation='swish'))
                     model.add(Dense(units=1, activation='swish'))# the output layer
                     model.compile(optimizer='Adam', loss='mean_squared_error')
-                    hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=epoch, validation_data=(self.x_test_reshaped, self.y_test_nn), batch_size=1, verbose=1, callbacks=[early_stopping])
+                    hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=100, validation_data=(self.x_test_reshaped, self.y_test_nn), batch_size=1, verbose=1, callbacks=[early_stopping])
                     predictions = model.predict(self.x_test_reshaped)
 
                     # Assuming predicted_values is a numpy array of shape (num_examples, num_time_steps)
