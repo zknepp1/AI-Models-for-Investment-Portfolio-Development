@@ -21,6 +21,7 @@ from tensorflow.keras.layers import GRU, Dense
 
 class Model_Builder:
     def __init__(self, df):
+
         self.df = df
         self.y_train_nn = None
         self.y_test_nn = None
@@ -29,11 +30,15 @@ class Model_Builder:
 
 
 
-        self.X = ['Open', 'High', 'Low','Close','Volume',
+        self.X = ['Target','Open', 'High', 'Low','Close','Volume',
                   'five_day_rolling','ten_day_rolling','twenty_day_rolling',
-                  'cleaned_pos','cleaned_neg','recession', 'fomc','inflation',
-                  'cpi','unemployment','gdp','bubble','bear','bearish','bull',
-                  'bullish','acquires','acquisition','merger','war','vix','volatility',
+                  'Technology','Blockchain','Economy_Monetary','IPO',
+                  'Retail_Wholesale','Financial_Markets','Manufacturing',
+                  'Real_Estate','Finance','Life_Sciences','Earnings',
+                  'Mergers','Energy','Economy_Fiscal','Economy_Macro',
+                  'sentiment_labels_Bullish','sentiment_labels_Bearish',
+                  'sentiment_labels_Neutral','sentiment_labels_Somewhat-Bullish',
+                  'sentiment_labels_Somewhat-Bearish',
                   'market_open', 'market_high','market_low', 'market_close',
                   'market_volume','market_twenty_roll']
 
@@ -45,21 +50,19 @@ class Model_Builder:
 
     def train_test_scale(self):
         copy = self.df.copy()
-        copy.dropna(inplace=True)
 
-        train = copy.iloc[:-90]
-        test = copy.iloc[-90:]
+        print(copy.shape)
+        copy.dropna(inplace=True)
+        print(copy.shape)
+
+        train = copy.iloc[:-20]
+        test = copy.iloc[-20:]
 
         print('Train shape: ', train.shape)
         print('Test shape: ', test.shape)
 
         X_train = train[self.X].values
         Y_train = train['Target'].values
-        #print(X_train.shape)
-        #print(X_train)
-        #print(Y_train.shape)
-        #print(Y_train)
-
 
         X_test = test[self.X].values
         Y_test = test['Target'].values
@@ -83,7 +86,7 @@ class Model_Builder:
         X_test_scaled = scaler.transform(x_test_nn)
 
         # Example data: n samples, each with m features
-        m = 33
+        m = 35
         timesteps = 1
 
         # Reshape the data to match neural network input shape
@@ -94,10 +97,10 @@ class Model_Builder:
     def build_and_optimize_models(self):
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         epochs = [100]
-        lstm_units1 = [128]
-        lstm_units2 = [2,128]
+        lstm_units1 = [2]
+        lstm_units2 = [2]
         lstm_units3 = [128]
-        input_shape = (1, 33)
+        input_shape = (1, 35)
 
         model = Sequential()
         model.add(LSTM(units=10, return_sequences=False, input_shape=input_shape))
@@ -107,8 +110,6 @@ class Model_Builder:
         hist = model.fit(self.x_train_reshaped, self.y_train_nn, epochs=10, batch_size=2, verbose=1)
         predictions = model.predict(self.x_test_reshaped)
         mse = mean_squared_error(self.y_test_nn, predictions)
-
-        print("MSE: ", mse)
 
         self.best_model = model
         self.best_mse = mse
@@ -148,22 +149,6 @@ class Model_Builder:
                         self.best_model = model
                         self.best_mse = mse
 
-
-    def plot_predictions(self, preds):
-        plt.plot(preds, label='Predictions')
-        plt.plot(self.y_test_nn, label='Actual')
-        plt.legend()
-        plt.show()
-
-
-
-
-    def plot_best_model_results(self):
-        preds = self.best_model.predict(self.x_test_reshaped)
-        plt.plot(preds, label='Predictions')
-        plt.plot(self.y_test_nn, label='Actual')
-        plt.legend()
-        plt.show(block=True)
 
 
 

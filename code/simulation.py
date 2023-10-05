@@ -2,6 +2,7 @@ import datetime
 import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import pandas as pd
 
 from dataframe_collector import DataFrameCollection
 from news_collecter import News_Collector
@@ -22,12 +23,15 @@ class Investment_Manager:
                   'market_volume','market_twenty_roll']
 
         self.preds = self.make_predictions()
+        self.prepped_data = self.prep_data()
 
+        self.strategy()
 
 
     def make_predictions(self):
         print(len(self.data_list))
         count = 0
+        preds_list = []
         for df in self.data_list:
           #print(df)
           #df = df.dropna()
@@ -50,10 +54,31 @@ class Investment_Manager:
           timesteps = 1
           X_reshaped = X_scaled.reshape(X_scaled.shape[0], timesteps, m)
           preds = self.models_list[count].predict(X_reshaped)
-          print(preds)
+          preds_list.append(preds)
           count += 1
-        return 'zach'
+        return preds_list
 
+
+    def prep_data(self):
+        count = 0
+        df_list = []
+        for i in self.data_list:
+          df = pd.DataFrame()
+          df['dates'] = i['clean_dates']
+          df['close'] = i['Close']
+          df = df.dropna()
+          df = df.reset_index(drop=True)
+          p = self.preds[count]
+          p = p.reshape(-1, 1)
+          pre = pd.DataFrame(p)
+          df['preds'] = pre
+          df_list.append(df)
+          count += 1
+        return df_list
+
+
+    def strategy(self):
+        print(self.prepped_data)
 
 
 #tickers = ['AMD', '^GSPC']

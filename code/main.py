@@ -40,8 +40,78 @@ def check_folder_existence(folder_path):
     print(f"Folder '{folder_path}' already exists.")
 
 
-tics = ['AMD','GOOGL', '^GSPC']
-check_for_models = tics[:-1]
+###########
+# SECTORS #
+###########
+
+# Energy
+# Exxon Mobil Corporation: XOM
+# Chevron Corporation: CVX
+# ConocoPhillips: COP
+
+# Healthcare
+# Johnson & Johnson: JNJ
+# CVS Health Corporation: CVS
+# UnitedHealth Group Incorporated: UNH
+
+# IT
+# Alphabet Inc. (Google's parent company): GOOGL
+# International Business Machines Corporation (IBM): IBM
+# Amazon.com, Inc.: AMZN
+
+# Consumer Discretionary
+# Netflix, Inc.: NFLX
+# Starbucks Corporation: SBUX
+# Marriott International, Inc.: MAR
+
+# Consumer Staples
+# PepsiCo, Inc.: PEP
+# Kellogg Company: K
+# The Hershey Company: HSY
+
+# Financials
+# Visa Inc.: V
+# The Travelers Companies, Inc.: TRV
+# CME Group Inc.: CME
+
+# Industrials
+# Boeing Company: BA
+# 3M Company: MMM
+# Delta Air Lines, Inc.: DAL
+
+# Materials
+# Sherwin-Williams Company: SHW
+# DuPont de Nemours, Inc.: DD
+# Mosaic Company: MOS
+
+# Real Estate
+# Alexandria Real Estate Equities, Inc.: ARE
+# Extra Space Storage Inc.: EXR
+# Host Hotels & Resorts, Inc.: HST
+
+# Utilities
+# NextEra Energy, Inc.: NEE
+# Xcel Energy Inc.: XEL
+# PPL Corporation: PPL
+
+# Communication Services
+# Comcast Corporation: CMCSA
+# Roku, Inc.: ROKU
+# Activision Blizzard, Inc.: ATVI
+
+
+
+#tics = ['XOM','CVX','COP','JNJ','CVS','UNH',
+#        'GOOGL','IBM','AMZN','NFLX','SBUX','MAR',
+#        'PEP','K','HSY','V','TRV','CME','BA','MMM','DAL',
+#        'SHW','DD','MOS','ARE','EXR','HST',
+#        'NEE','XEL','PPL','CMCSA','ROKU','ATVI','^GSPC']
+
+
+tics = ['XOM','CVX','COP','JNJ','CVS','UNH','^GSPC']
+
+
+tics_no_market = tics[:-1]
 
 
 
@@ -57,28 +127,78 @@ check_folder_existence(models_path)
 
 
 
+
+#start = '2022-1-1'
+#end = '2023-10-22'
+#fin = DataFrameCollection(tics, start, end)
+#financials = fin.financial_data
+
+#collector = News_Collector(tics_no_market)
+#news_data = collector.return_news_data()
+#print(news_data[0].head(5))
+#print(news_data[1].head(5))
+
+
+
+#join = Join_Data(financials, news_data)
+#df_list = join.return_df()
+#print(df_list[0].head())
+#print(df_list[1].head())
+
+
+
+
+#list_of_models = []
+#list_of_mse = []
+#count = 0
+
+
+#for df in df_list:
+#  train_df = df.iloc[:-25]
+#  sim_df = df.iloc[-25:]
+  #train_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) + '_train_df.csv', index=False)
+  #sim_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) +'_sim_df.csv', index=False)
+
+#  builder = Model_Builder(train_df)
+#  builder.train_test_scale()
+#  builder.build_and_optimize_models()
+#  model = builder.return_best_model()
+#  mse = builder.return_best_mse()
+#  print('MSE: ', mse)
+
+  #model.save('/home/zacharyknepp2012/Knepp_OUDSA5900/models/' + str(tics[count]) + 'model')
+  #list_of_models.append(model)
+  #list_of_mse.append(mse)
+  #count += 1
+
+
+
+
+
+
 try:
   loaded_models = []
   loaded_sim_data = []
-  for tic in check_for_models:
+  for tic in tics_no_market:
     model = tf.keras.models.load_model(models_path + '/' + str(tic) + 'model')
     loaded_models.append(model)
 
     sim_df = pd.read_csv(data_path + '/' + str(tic) + '_sim_df.csv')
     loaded_sim_data.append(sim_df)
-
-
     print('The try statement was successful!!!!!!!!!!!!!!!!!!!!!!')
 
 
 
 except:
-  start = '2015-1-1'
+  start = '2022-1-1'
   end = '2023-10-22'
   fin = DataFrameCollection(tics, start, end)
   financials = fin.financial_data
-  collector = News_Collector(2015, 2024, 10)
+
+  collector = News_Collector(tics_no_market)
   news_data = collector.return_news_data()
+  print(news_data[0])
+
   join = Join_Data(financials, news_data)
   df_list = join.return_df()
 
@@ -98,6 +218,7 @@ except:
     builder.build_and_optimize_models()
     model = builder.return_best_model()
     mse = builder.return_best_mse()
+    print('MSE: ', mse)
     model.save('/home/zacharyknepp2012/Knepp_OUDSA5900/models/' + str(tics[count]) + 'model')
     list_of_models.append(model)
     list_of_mse.append(mse)
@@ -106,8 +227,8 @@ except:
 
 
 
-logan = Investment_Manager(check_for_models, loaded_sim_data, loaded_models)
-
+#logan = Investment_Manager(check_for_models, loaded_sim_data, loaded_models)
+#logan.strategize()
 
 print('THE PROGRAM HAS FINISHED EXECUTING! YOU BETTER HAVE A NICE DAY')
 print('OR ELSE... >:)')

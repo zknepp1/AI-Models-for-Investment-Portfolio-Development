@@ -3,72 +3,274 @@ import pynytimes
 import time
 import requests
 import re
+from collections import Counter
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.util import bigrams, trigrams
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+import statistics
+
+
+#from ast import Match
+from datetime import datetime
+
+
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+
 nltk.download("punkt")
 nltk.download("stopwords")
 nltk.download("wordnet")
 nltk.download('vader_lexicon')
 
 pd.set_option('display.max_columns', None)  # Display all columns
-
+pd.set_option('display.max_rows', None)  # Display all columns
 
 
 #This class is meant to collect news articles from nyt between the years 2000-2023
 # The packages used for this class is pynytimes
 class News_Collector:
-    def __init__(self, start_year, end_year, end_month):
-        self.months = list(range(1, end_month))
-        self.years = list(range(start_year, end_year))
+    def __init__(self, tics):
+
+        self.tickers = tics
+
+
+        self.from_ = ['20220101T0000','20220201T0000','20220301T0000','20220401T0000',
+                      '20220501T0000','20220601T0000','20220701T0000','20220801T0000',
+                      '20220901T0000','20221001T0000','20221101T0000','20221201T0000',
+                      '20230101T0000','20230201T0000','20230301T0000','20230401T0000',
+                      '20230501T0000','20230601T0000','20230701T0000','20230801T0000',
+                      '20230901T0000','20231001T0000']
+
+        self.to_ = ['20220201T0000','20220301T0000','20220401T0000','20220501T0000',
+                    '20220601T0000','20220701T0000','20220801T0000','20220901T0000',
+                    '20221001T0000','20221101T0000','20221201T0000','20230101T0000',
+                    '20230201T0000','20230301T0000','20230401T0000','20230501T0000',
+                    '20230601T0000','20230701T0000','20230801T0000','20230901T0000',
+                    '20231001T0000','20231101T0000']
 
         self.news_data = self.collect_all_news()
-        self.clean_news_data = self.clean_news_data()
-        self.sentiment = self.calculate_sentiment()
-        self.count_data = self.look_for_words()
+        self.data_with_topics = self.loop_through_count_topics()
+        self.mode_data = self.loop_through_mode_of_labels()
+
+
+        #self.clean_news_data = self.clean_news_data()
+        #self.clusters = self.cluster_news()
+        #self.sentiment = self.calculate_sentiment()
+        #self.count_data = self.look_for_words()
+
 
     # Collects all news data since the year 2000
     def collect_all_news(self):
-        dt = []
-        headline = []
-        snippet = []
-        count = 0
-        for i in range(len(self.years)):
-          for j in range(len(self.months)):
-            try:
-              time.sleep(20)
-              base_url = 'https://api.nytimes.com/svc/archive/v1/' + str(self.years[i]) + '/' + str(self.months[j]) + '.json?api-key=GwXZGsAX0RQBW1DKCJ0B6n2MtfSCgEnZ'
-              # Make the API request
-              response = requests.get(base_url)
-              # Check if the request was successful
-              print(response)
-              if response.status_code == 200:
-                data = response.json()
-                # Extract and print article headlines and snippets
-                for article in data['response']['docs']:
-                  dt.append(article['pub_date'])
-                  headline.append(article['headline']['main'])
-                  snippet.append(article['snippet'])
+        base_url = 'https://www.alphavantage.co/query?'
+        function = 'NEWS_SENTIMENT'
+        api_key = '2BVQAFUBRB5U2BZR'
+        limit='1000'
+        tickers = self.tickers
 
-              else:
-                print('Error1:', response.status_code)
+        list_of_dfs = []
+        for ticker in tickers:
+          dfs = []
+          for i in range(len(self.from_)):
+            pattern = r'(\d{4})(\d{2})(\d{2})'
+            time_from= self.from_[i]
+            time_to = self.to_[i]
+            try:
+              response = requests.get(f'{base_url}function={function}&tickers={ticker}&time_from={time_from}&time_to={time_to}&limit={limit}&apikey={api_key}')
+              data = response.json()
+              df = pd.DataFrame(data['feed'])
+              dates = [str(date) for date in df['time_published']]
+              m = []
+              for date in dates:
+                match = re.search(pattern, date)
+                if match:
+                  formatted_date = '-'.join(match.groups())
+                  m.append(formatted_date)
+                else:
+                  print("No date found in the input string.")
+
+              df['clean_dates'] = m
+              df['ticker'] = ticker
+              dfs.append(df)
+              time.sleep(3)
 
             except:
-              print('Error2:' + str(count))
-        df = pd.DataFrame({'dt': dt, 'headline': headline, 'snippet': snippet})
-        return df
+              print('Data for this month does not exist')
 
-    # A function where you can query for a specific topic in nyt database
-    def query_news_data(self, topic):
-        apikey = "qMNbG2buoVVqqAu7ygcTkE4dBtx9x1l8"
-        nytapi = pynytimes.NYTAPI(apikey, parse_dates=True)
+          list_of_dfs.append(dfs)
 
-        # searching for specific articles
-        articles = nytapi.article_search(query = topic, results = 5000, options = {
-          "sort": "relevance"}, dates = {"begin": datetime.datetime(2000, 1, 1),"end": datetime.datetime(2023, 12, 31)})
+        combined_list = []
+        for df in list_of_dfs:
+          combined_df = pd.DataFrame()
+          for i in df:
+            combined_df = pd.concat([combined_df, i])
+          combined_list.append(combined_df)
+
+
+        agg_dict = {
+            'title': list,
+            'summary': list,
+            'topics': list,
+            'overall_sentiment_score': list,
+            'overall_sentiment_label': list,
+            'ticker_sentiment': list
+        }
+
+        grouped_df_list = []
+        for df in combined_list:
+          grouped_df = df.groupby('clean_dates').agg(agg_dict).reset_index()
+          grouped_df_list.append(grouped_df)
+
+        return grouped_df_list
+
+
+    def loop_through_count_topics(self):
+        dfs_with_topics = []
+        for df in self.news_data:
+          tdf = self.count_topics(df)
+          dfs_with_topics.append(tdf)
+        return dfs_with_topics
+
+
+    def count_topics(self, df):
+        topix = df['topics']
+        print(len(topix))
+        copy = df.copy()
+
+        tech_list = []
+        block_list = []
+        economy_list = []
+        ipo_list = []
+        retail_list = []
+        finmarket_list = []
+        manu_list = []
+        real_est_list = []
+        fin_list = []
+        ls_list = []
+        earnings_list = []
+        merge_list = []
+        energy_list = []
+        ef_list = []
+        em_list = []
+        for top in topix:
+          for t in top:
+            tech = 0
+            block = 0
+            economy = 0
+            ipo = 0
+            retail = 0
+            finmarket = 0
+            manu = 0
+            real_est = 0
+            fin = 0
+            ls = 0
+            earnings = 0
+            merge = 0
+            energy = 0
+            ef = 0
+            em = 0
+
+            for i in t:
+              if i['topic'] == 'Technology':
+                tech += 1
+              elif i['topic'] == 'Blockchain':
+                block += 1
+              elif i['topic'] == 'Economy - Monetary':
+                economy += 1
+              elif i['topic'] == 'IPO':
+                ipo += 1
+              elif i['topic'] == 'Retail & Wholesale':
+                retail += 1
+              elif i['topic'] == 'Financial Markets':
+                finmarket += 1
+              elif i['topic'] == 'Manufacturing':
+                manu += 1
+              elif i['topic'] == 'Real Estate & Construction':
+                real_est += 1
+              elif i['topic'] == 'Finance':
+                fin += 1
+              elif i['topic'] == 'Life Sciences':
+                ls += 1
+              elif i['topic'] == 'Earnings':
+                earnings += 1
+              elif i['topic'] == 'Mergers & Acquisitions':
+                merge += 1
+              elif i['topic'] == 'Energy & Transportation':
+                energy += 1
+              elif i['topic'] == 'Economy - Fiscal':
+                ef += 1
+              elif i['topic'] == 'Economy - Macro':
+                em += 1
+
+          tech_list.append(tech)
+          block_list.append(block)
+          economy_list.append(economy)
+          ipo_list.append(ipo)
+          retail_list.append(retail)
+          finmarket_list.append(finmarket)
+          manu_list.append(manu)
+          real_est_list.append(real_est)
+          fin_list.append(fin)
+          ls_list.append(ls)
+          earnings_list.append(earnings)
+          merge_list.append(merge)
+          energy_list.append(energy)
+          ef_list.append(ef)
+          em_list.append(em)
+        copy['Technology'] = tech_list
+        copy['Blockchain'] = block_list
+        copy['Economy_Monetary'] = economy_list
+        copy['IPO'] = ipo_list
+        copy['Retail_Wholesale'] = retail_list
+        copy['Financial_Markets'] = finmarket_list
+        copy['Manufacturing'] = manu_list
+        copy['Real_Estate'] = real_est_list
+        copy['Finance'] = fin_list
+        copy['Life_Sciences'] = ls_list
+        copy['Earnings'] = earnings_list
+        copy['Mergers'] = merge_list
+        copy['Energy'] = energy_list
+        copy['Economy_Fiscal'] = ef_list
+        copy['Economy_Macro'] = em_list
+
+        return copy
+
+
+
+    def loop_through_mode_of_labels(self):
+        dfs_list = []
+        count = 0
+        for df in self.data_with_topics:
+          df_modes = self.mode_of_labels(df)
+          df_modes['ticker'] = self.tickers[count]
+          dfs_list.append(df_modes)
+          count += 1
+
+        return dfs_list
+
+
+
+    def mode_of_labels(self, df):
+        copy = df.copy()
+        sentlabels = df['overall_sentiment_label']
+        labels = []
+        for i in sentlabels:
+          labels.append(statistics.mode(i))
+
+        copy['sentiment_labels'] = labels
+        # Convert 'Category' column into binary variables
+        copy = pd.get_dummies(copy, columns=['sentiment_labels'], prefix=['sentiment_labels'])
+        copy['sentiment_labels_Bullish'] = copy['sentiment_labels_Bullish'].astype(int)
+        copy['sentiment_labels_Neutral'] = copy['sentiment_labels_Neutral'].astype(int)
+        copy['sentiment_labels_Somewhat-Bearish'] = copy['sentiment_labels_Somewhat-Bearish'].astype(int)
+        copy['sentiment_labels_Somewhat-Bullish'] = copy['sentiment_labels_Somewhat-Bullish'].astype(int)
+
+        return copy
 
 
     # Saves the dataframe locally
@@ -79,290 +281,16 @@ class News_Collector:
 
 
     def return_news_data(self):
-        return self.count_data
+        return self.mode_data
 
 
-    def clean_news_data(self):
-        # Remove rows with NA values
-        copy = self.news_data.dropna()
-        # Define a regex pattern for matching dates in YYYY-MM-DD or MM/DD/YYYY format
-        date_pattern = r'\d\d\d\d-\d\d-\d\d'
-
-        dates = copy['dt']
-        new_dates = []
-        for i in dates:
-          date_found = re.findall(date_pattern, i)
-          new_dates.append(str(date_found[0]))
-        copy['clean_dates'] = new_dates
-        grouped = self.aggregate_by_date(copy)
-        headline_cleaned = []
-        headlines = grouped['headline']
-        stop_words = set(stopwords.words("english"))
-        lemmatizer = WordNetLemmatizer()
-
-        for i in headlines:
-          i.lower()
-          tokens = word_tokenize(i)
-          # Create bigrams
-          bi_grams = list(bigrams(tokens))
-          #self.bigrams.append(bi_grams)
-          # Create trigrams
-          tri_grams = list(trigrams(tokens))
-          #self.trigrams.append(tri_grams)
-          # Removing HTML tags (if applicable)
-          cleaned_tokens = [re.sub(r"<.*?>", "", token) for token in tokens]
-          # Removing special characters and punctuation
-          cleaned_tokens = [re.sub(r"[^a-zA-Z\s]", "", token) for token in cleaned_tokens]
-          # Removing numbers
-          cleaned_tokens = [re.sub(r"\d", "", token) for token in cleaned_tokens]
-          # Removing stop words
-          cleaned_tokens = [token for token in cleaned_tokens if token not in stop_words]
-          # Lemmatization
-          cleaned_tokens = [lemmatizer.lemmatize(token) for token in cleaned_tokens]
-          # Removing whitespace
-          cleaned_tokens = [token.strip() for token in cleaned_tokens]
-          # Remove empty tokens
-          cleaned_tokens = [token for token in cleaned_tokens if token]
-          headline_cleaned.append(cleaned_tokens)
-
-        # Saveing clean tokens to dataframe
-        grouped['cleaned_text'] = headline_cleaned
-        return grouped
-
-
-    def aggregate_by_date(self, copy):
-        # Group by 'date_column' and aggregate text using join
-        grouped = copy.groupby('clean_dates').agg({'headline': ' '.join, 'snippet': ' '.join})
-        return grouped
-
-    def calculate_sentiment(self):
-        copy = self.clean_news_data
-        head_pos = []
-        head_neg = []
-        head_neu = []
-
-        cleaned_text_pos = []
-        cleaned_text_neg = []
-        cleaned_text_neu = []
-
-        for index, row in copy.iterrows():
-          text1 = row['headline']
-          text2 = " ".join(row['cleaned_text'])
-          # Create a SentimentIntensityAnalyzer object
-          sid = SentimentIntensityAnalyzer()
-          # Perform sentiment analysis
-          sentiment_scores = sid.polarity_scores(text1)
-          head_pos.append(sentiment_scores['pos'])
-          head_neg.append(sentiment_scores['neg'])
-          head_neu.append(sentiment_scores['neu'])
-          sentiment_scores = sid.polarity_scores(text2)
-          cleaned_text_pos.append(sentiment_scores['pos'])
-          cleaned_text_neg.append(sentiment_scores['neg'])
-          cleaned_text_neu.append(sentiment_scores['neu'])
-
-        copy['pos'] = head_pos
-        copy['neg'] = head_neg
-        copy['neu'] = head_neu
-        copy['cleaned_pos'] = cleaned_text_pos
-        copy['cleaned_neg'] = cleaned_text_neg
-        copy['cleaned_neu'] = cleaned_text_neu
-        return copy
-
-
-    def look_for_words(self):
-        text = self.sentiment['cleaned_text']
-        copy = self.sentiment
-
-        biden_list = []
-        recession_list = []
-        fomc_list = []
-        inflation_list = []
-        cpi_list = []
-        unemployment_list = []
-        gdp_list = []
-        bubble_list = []
-        bear_list = []
-        bearish_list = []
-        bull_list = []
-        bullish_list = []
-        acquires_list = []
-        acquisition_list = []
-        merger_list = []
-        war_list = []
-        vix_list = []
-        volatility_list = []
-        rate_cuts_list = []
-        rate_hikes_list = []
-        beat_earnings_list = []
-        beat_eps_list = []
-        beat_revenue_list = []
-        missed_earnings_list = []
-        missed_eps_list = []
-        missed_revenue_list = []
-        dividend_cut_list = []
-        dividend_raise_list = []
-
-        for day in text:
-          biden = 0
-          recession = 0
-          fomc = 0
-          inflation = 0
-          cpi = 0
-          unemployment = 0
-          gdp = 0
-          bubble = 0
-          bear = 0
-          bearish = 0
-          bull = 0
-          bullish = 0
-          acquires = 0
-          acquisition = 0
-          merger = 0
-          war = 0
-          vix = 0
-          volatility = 0
-          rate_cuts = 0
-          rate_hikes = 0
-          beat_earnings = 0
-          beat_eps = 0
-          beat_revenue = 0
-          missed_earnings = 0
-          missed_eps = 0
-          missed_revenue = 0
-          dividend_cut = 0
-          dividend_raise = 0
-
-          # Generate bigrams
-          bi_grams = list(bigrams(day))
-          for i in bi_grams:
-            i = i[0].lower() + ' ' + i[1].lower()
-            if i.lower() == 'rate cuts' or i.lower() == 'rate cut':
-              rate_cuts += 1
-            elif i.lower() == 'rate hikes' or i.lower() == 'rate hike':
-              rate_hikes += 1
-            elif i.lower() == 'beat earnings':
-              beat_earnings += 1
-            elif i.lower() == 'beat eps':
-              beat_eps += 1
-            elif i.lower() == 'beat revenue':
-              beat_revenue += 1
-            elif i.lower() == 'missed earnings':
-              missed_earnings += 1
-            elif i.lower() == 'missed eps':
-              missed_eps += 1
-            elif i.lower() == 'missed revenue':
-              missed_revenue += 1
-            elif i.lower() == 'dividend cuts' or i.lower() == 'dividend cut':
-              dividend_cut += 1
-            elif i.lower() == 'dividend raise' or i.lower() == 'dividend raises':
-              dividend_raise += 1
-
-
-          rate_cuts_list.append(rate_cuts)
-          rate_hikes_list.append(rate_hikes)
-          beat_earnings_list.append(beat_earnings)
-          beat_eps_list.append(beat_eps)
-          beat_revenue_list.append(beat_revenue)
-          missed_earnings_list.append(missed_earnings)
-          missed_eps_list.append(missed_eps)
-          missed_revenue_list.append(missed_revenue)
-          dividend_cut_list.append(dividend_cut)
-          dividend_raise_list.append(dividend_raise)
-
-          for i in day:
-            if i.lower() == 'recession':
-              recession += 1
-            elif i.lower() == 'biden':
-              biden += 1
-            elif i.lower() == 'fomc':
-              fomc += 1
-            elif i.lower() == 'inflation':
-              inflation += 1
-            elif i.lower() == 'cpi':
-              cpi += 1
-            elif i.lower() == 'unemployment':
-              unemployment += 1
-            elif i.lower() == 'gdp':
-              gdp += 1
-            elif i.lower() == 'bubble':
-              bubble += 1
-            elif i.lower() == 'bear':
-              bear += 1
-            elif i.lower() == 'bearish':
-              bearish += 1
-            elif i.lower() == 'bull':
-              bull += 1
-            elif i.lower() == 'bullish':
-              bullish += 1
-            elif i.lower() == 'acquires':
-              acquires += 1
-            elif i.lower() == 'acquisition':
-              acquisition += 1
-            elif i.lower() == 'merger':
-              merger += 1
-            elif i.lower() == 'war':
-              war += 1
-            elif i.lower() == 'vix':
-              vix += 1
-            elif i.lower() == 'volatility':
-              volatility += 1
-
-          biden_list.append(biden)
-          recession_list.append(recession)
-          fomc_list.append(fomc)
-          inflation_list.append(inflation)
-          cpi_list.append(cpi)
-          unemployment_list.append(unemployment)
-          gdp_list.append(gdp)
-          bubble_list.append(bubble)
-          bear_list.append(bear)
-          bearish_list.append(bearish)
-          bull_list.append(bull)
-          bullish_list.append(bullish)
-          acquires_list.append(acquires)
-          acquisition_list.append(acquisition)
-          merger_list.append(merger)
-          war_list.append(war)
-          vix_list.append(vix)
-          volatility_list.append(volatility)
-
-        copy['biden'] = biden_list
-        copy['recession'] = recession_list
-        copy['fomc'] = fomc_list
-        copy['inflation'] = inflation_list
-        copy['cpi'] = cpi_list
-        copy['unemployment'] = unemployment_list
-        copy['gdp'] = gdp_list
-        copy['bubble'] = bubble_list
-        copy['bear'] = bear_list
-        copy['bearish'] = bearish_list
-        copy['bull'] = bull_list
-        copy['bullish'] = bullish_list
-        copy['acquires'] = acquires_list
-        copy['acquisition'] = acquisition_list
-        copy['merger'] = merger_list
-        copy['war'] = war_list
-        copy['vix'] = vix_list
-        copy['volatility'] = volatility_list
-        copy['rate_cuts'] = rate_cuts_list
-        copy['rate_hikes'] = rate_hikes_list
-        copy['beat_earnings'] = beat_earnings_list
-        copy['beat_eps'] = beat_eps_list
-        copy['beat_revenue'] = beat_revenue_list
-        copy['missed_earnings'] = missed_earnings_list
-        copy['missed_eps'] = missed_eps_list
-        copy['missed_revenue'] = missed_revenue_list
-        copy['dividend_cut'] = dividend_cut_list
-        copy['dividend_raise'] = dividend_raise_list
-
-        return copy
 
 
 
 
 
 # EXAMPLE CODE
-#collector = News_Collector(2020, 2022, 9)
+#collector = News_Collector()
 #news_data = collector.return_news_data()
 #print(news_data)
 
