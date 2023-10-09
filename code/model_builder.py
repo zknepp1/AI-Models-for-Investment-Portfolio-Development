@@ -1,5 +1,4 @@
-#from keras.optimizers.optimizer import learning_rate_schedule
-#from keras.activations import activation_layers
+
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import LSTM, GRU, Dense, Bidirectional
 from tensorflow.keras.layers import LSTM, Conv1D, MaxPooling1D, Dense, Bidirectional, Dropout
@@ -25,7 +24,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 from tensorflow.keras.layers import GRU, Dense
 
-
+# This class will build a neural network for an indivisual stock
 class Model_Builder:
     def __init__(self, df):
 
@@ -40,7 +39,6 @@ class Model_Builder:
         self.x_train_reshaped = None
         self.x_test_reshaped = None
 
-#'sentiment_labels_Bearish'
 
         self.X = ['Target','Open', 'High', 'Low','Close','Volume',
                   'five_day_rolling','ten_day_rolling','twenty_day_rolling',
@@ -73,7 +71,7 @@ class Model_Builder:
         self.best_model = None
         self.best_mse = None
 
-
+    # Not usinhg this
     def prep_data(self):
         copy = self.df.copy()
 
@@ -91,25 +89,16 @@ class Model_Builder:
         X_scaled = scaler.transform(X)
         X_scaled = pd.DataFrame(X_scaled)
 
-#        X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=random_state)
-
         self.y_train = y.iloc[:-20]
-
         self.y_test = y.iloc[-20:]
-
         self.x_train = X_scaled.iloc[:-20]
-
         self.x_test = X_scaled.iloc[-20:]
 
 
 
-
+    # Not usinhg this
     def build_rf(self):
-
         model = RandomForestRegressor(random_state=42)
-
-
-
         param_grid = {
             'n_estimators': [100, 200, 300],
             'max_depth': [None, 10, 20, 30],
@@ -124,43 +113,27 @@ class Model_Builder:
         best_params = grid_search.best_params_
         best_model = grid_search.best_estimator_
 
-
         y_pred = best_model.predict(self.x_test)
         mse = mean_squared_error(self.y_test, y_pred)
         print(f"Best Model Parameters: {best_params}")
         print(f"Test Mean Squared Error: {mse}")
 
 
-        #model.fit(self.x_train, self.y_train)
-        #y_pred = model.predict(self.x_test)
-        #print()
-        #mse = mean_squared_error(self.y_test, y_pred)
-        #print('MSE: ', mse)
 
-
-
-
-
+    # Separates data frame into train and test 
+    # scales data and preps for neural network training
     def train_test_scale(self):
         copy = self.df.copy()
-
-        print(copy.shape)
         copy.dropna(inplace=True)
-        print(copy.shape)
 
         train = copy.iloc[:-20]
         test = copy.iloc[-20:]
 
-        print('Train shape: ', train.shape)
-        print('Test shape: ', test.shape)
-
         X_train = train[self.X_no_target].values
         Y_train = train['Target'].values
-
         X_test = test[self.X_no_target].values
         Y_test = test['Target'].values
 
-        # Convert to numpy arrays
         x_train_nn = np.array(X_train)
         y_train_nn = np.array(Y_train)
         x_test_nn = np.array(X_test)
@@ -168,25 +141,18 @@ class Model_Builder:
         self.y_train_nn = y_train_nn
         self.y_test_nn = y_test_nn
 
-        # Assuming you have split your data into X_train and X_test
         scaler = StandardScaler()
-
-        # Fit the scaler on the training data
         scaler.fit(X_train)
-
-        # Transform both training and test data using the same scaler
         X_train_scaled = scaler.transform(x_train_nn)
         X_test_scaled = scaler.transform(x_test_nn)
 
-        # Example data: n samples, each with m features
         m = 35
         timesteps = 1
 
-        # Reshape the data to match neural network input shape
-        self.x_train_reshaped = X_train_scaled.reshape(X_train_scaled.shape[0], timesteps, m)  # Adding an extra dimension for single feature
-        self.x_test_reshaped = X_test_scaled.reshape(X_test_scaled.shape[0], timesteps, m)  # Adding an extra dimension for single feature
+        self.x_train_reshaped = X_train_scaled.reshape(X_train_scaled.shape[0], timesteps, m) 
+        self.x_test_reshaped = X_test_scaled.reshape(X_test_scaled.shape[0], timesteps, m)
 
-
+    # Builds the neural network and optimizes best model based on MSE
     def build_and_optimize_models(self):
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         epochs = [100]
@@ -250,13 +216,6 @@ class Model_Builder:
 
     def return_best_mse(self):
         return self.best_mse
-
-
-
-
-
-
-
 
 
 
