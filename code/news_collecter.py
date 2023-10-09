@@ -40,14 +40,14 @@ class News_Collector:
         self.tickers = tics
 
 
-        self.from_ = ['20220101T0000','20220201T0000','20220301T0000','20220401T0000',
+        self.from_ = ['20220201T0000','20220301T0000','20220401T0000',
                       '20220501T0000','20220601T0000','20220701T0000','20220801T0000',
                       '20220901T0000','20221001T0000','20221101T0000','20221201T0000',
                       '20230101T0000','20230201T0000','20230301T0000','20230401T0000',
                       '20230501T0000','20230601T0000','20230701T0000','20230801T0000',
                       '20230901T0000','20231001T0000']
 
-        self.to_ = ['20220201T0000','20220301T0000','20220401T0000','20220501T0000',
+        self.to_ = ['20220301T0000','20220401T0000','20220501T0000',
                     '20220601T0000','20220701T0000','20220801T0000','20220901T0000',
                     '20221001T0000','20221101T0000','20221201T0000','20230101T0000',
                     '20230201T0000','20230301T0000','20230401T0000','20230501T0000',
@@ -57,13 +57,12 @@ class News_Collector:
         self.news_data = self.collect_all_news()
         self.data_with_topics = self.loop_through_count_topics()
         self.mode_data = self.loop_through_mode_of_labels()
-
+        self.sentiment_data = self.loop_through_average_sentiment()
 
         #self.clean_news_data = self.clean_news_data()
         #self.clusters = self.cluster_news()
         #self.sentiment = self.calculate_sentiment()
         #self.count_data = self.look_for_words()
-
 
     # Collects all news data since the year 2000
     def collect_all_news(self):
@@ -266,11 +265,36 @@ class News_Collector:
         # Convert 'Category' column into binary variables
         copy = pd.get_dummies(copy, columns=['sentiment_labels'], prefix=['sentiment_labels'])
         copy['sentiment_labels_Bullish'] = copy['sentiment_labels_Bullish'].astype(int)
+        copy['sentiment_labels_Bearish'] = copy['sentiment_labels_Bearish'].astype(int)
         copy['sentiment_labels_Neutral'] = copy['sentiment_labels_Neutral'].astype(int)
         copy['sentiment_labels_Somewhat-Bearish'] = copy['sentiment_labels_Somewhat-Bearish'].astype(int)
         copy['sentiment_labels_Somewhat-Bullish'] = copy['sentiment_labels_Somewhat-Bullish'].astype(int)
 
         return copy
+
+
+
+    def loop_through_average_sentiment(self):
+        dfs_list = []
+        for df in self.mode_data:
+          df_sent = self.average_sentiment(df)
+          dfs_list.append(df_sent)
+
+        return dfs_list
+
+
+
+    def average_sentiment(self, df):
+        copy = df.copy()
+        sentiment = copy['overall_sentiment_score']
+        average_sentiment = []
+        for i in sentiment:
+          average_sentiment.append(statistics.mean(i))
+
+        copy['average_sentiment'] = average_sentiment
+        return copy
+
+
 
 
     # Saves the dataframe locally
@@ -281,7 +305,7 @@ class News_Collector:
 
 
     def return_news_data(self):
-        return self.mode_data
+        return self.sentiment_data
 
 
 

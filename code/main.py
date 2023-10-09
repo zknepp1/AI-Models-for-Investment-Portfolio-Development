@@ -1,4 +1,4 @@
-
+0
 import numpy as np
 import pandas as pd
 pd.set_option('display.max_columns', None)  # Display all columns
@@ -29,7 +29,7 @@ from news_collecter import News_Collector
 from news_cleanup import Text_Cleaner
 from join_data import Join_Data
 from model_builder import Model_Builder
-from simulation import Investment_Manager
+#from simulation import Investment_Manager
 
 #function to Check if the folder exists, and if not, create it
 def check_folder_existence(folder_path):
@@ -55,9 +55,13 @@ def check_folder_existence(folder_path):
 # UnitedHealth Group Incorporated: UNH
 
 # IT
-# Alphabet Inc. (Google's parent company): GOOGL
-# International Business Machines Corporation (IBM): IBM
-# Amazon.com, Inc.: AMZN
+# Intel Corporation - INTC
+# 
+# 
+
+##########################################################
+
+
 
 # Consumer Discretionary
 # Netflix, Inc.: NFLX
@@ -108,8 +112,9 @@ def check_folder_existence(folder_path):
 #        'NEE','XEL','PPL','CMCSA','ROKU','ATVI','^GSPC']
 
 
-tics = ['XOM','CVX','COP','JNJ','CVS','UNH','^GSPC']
-
+#'CVS' 'UNH'
+tics = ['INTC','XEL','NEE','DD','MOS','BA','MMM','DAL','CME','TRV','V','HSY','K','PEP','SBUX','NFLX','JNJ','XOM','COP','^GSPC']
+#tics = ['INTC','XEL','^GSPC']
 
 tics_no_market = tics[:-1]
 
@@ -176,53 +181,47 @@ check_folder_existence(models_path)
 
 
 
-try:
-  loaded_models = []
-  loaded_sim_data = []
-  for tic in tics_no_market:
-    model = tf.keras.models.load_model(models_path + '/' + str(tic) + 'model')
-    loaded_models.append(model)
+start = '2022-1-1'
+end = '2023-10-22'
+fin = DataFrameCollection(tics, start, end)
+financials = fin.financial_data
 
-    sim_df = pd.read_csv(data_path + '/' + str(tic) + '_sim_df.csv')
-    loaded_sim_data.append(sim_df)
-    print('The try statement was successful!!!!!!!!!!!!!!!!!!!!!!')
+collector = News_Collector(tics_no_market)
+news_data = collector.return_news_data()
+print(news_data[0].head())
+
+join = Join_Data(financials, news_data)
+df_list = join.return_df()
+
+list_of_models = []
+list_of_mse = []
+count = 0
+for df in df_list:
+  #print(df)
+  train_df = df.iloc[:-25]
+  sim_df = df.iloc[-25:]
+
+  train_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) + '_train_df.csv', index=False)
+  sim_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) +'_sim_df.csv', index=False)
+
+  print('Train df dimensions: ', train_df.shape)
+  print(train_df.head())
 
 
+  builder = Model_Builder(train_df)
+  #builder.prep_data()
+  #builder.build_rf()
 
-except:
-  start = '2022-1-1'
-  end = '2023-10-22'
-  fin = DataFrameCollection(tics, start, end)
-  financials = fin.financial_data
+  builder.train_test_scale()
+  builder.build_and_optimize_models()
 
-  collector = News_Collector(tics_no_market)
-  news_data = collector.return_news_data()
-  print(news_data[0])
-
-  join = Join_Data(financials, news_data)
-  df_list = join.return_df()
-
-  list_of_models = []
-  list_of_mse = []
-  count = 0
-  for df in df_list:
-    #print(df)
-    train_df = df.iloc[:-25]
-    sim_df = df.iloc[-25:]
-
-    train_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) + '_train_df.csv', index=False)
-    sim_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) +'_sim_df.csv', index=False)
-
-    builder = Model_Builder(train_df)
-    builder.train_test_scale()
-    builder.build_and_optimize_models()
-    model = builder.return_best_model()
-    mse = builder.return_best_mse()
-    print('MSE: ', mse)
-    model.save('/home/zacharyknepp2012/Knepp_OUDSA5900/models/' + str(tics[count]) + 'model')
-    list_of_models.append(model)
-    list_of_mse.append(mse)
-    count += 1
+  model = builder.return_best_model()
+  mse = builder.return_best_mse()
+  print('MSE: ', mse)
+  model.save('/home/zacharyknepp2012/Knepp_OUDSA5900/models/' + str(tics[count]) + 'model')
+  list_of_models.append(model)
+  list_of_mse.append(mse)
+  count += 1
 
 
 

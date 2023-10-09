@@ -2,10 +2,17 @@
 #from keras.activations import activation_layers
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import LSTM, GRU, Dense, Bidirectional
+from tensorflow.keras.layers import LSTM, Conv1D, MaxPooling1D, Dense, Bidirectional, Dropout
+
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import Sequential
+
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, mean_squared_error
+
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 from keras.layers import Embedding,Dense,LSTM,Dropout,Flatten,BatchNormalization,Input, Attention,Concatenate
@@ -23,12 +30,17 @@ class Model_Builder:
     def __init__(self, df):
 
         self.df = df
+        self.y_train = None
+        self.y_test = None
+        self.x_train = None
+        self.x_test = None
+
         self.y_train_nn = None
         self.y_test_nn = None
         self.x_train_reshaped = None
         self.x_test_reshaped = None
 
-
+#'sentiment_labels_Bearish'
 
         self.X = ['Target','Open', 'High', 'Low','Close','Volume',
                   'five_day_rolling','ten_day_rolling','twenty_day_rolling',
@@ -38,7 +50,21 @@ class Model_Builder:
                   'Mergers','Energy','Economy_Fiscal','Economy_Macro',
                   'sentiment_labels_Bullish','sentiment_labels_Bearish',
                   'sentiment_labels_Neutral','sentiment_labels_Somewhat-Bullish',
-                  'sentiment_labels_Somewhat-Bearish',
+                  'sentiment_labels_Somewhat-Bearish','average_sentiment',
+                  'market_open', 'market_high','market_low', 'market_close',
+                  'market_volume','market_twenty_roll']
+
+
+
+        self.X_no_target = ['Open', 'High', 'Low','Close','Volume',
+                  'five_day_rolling','ten_day_rolling','twenty_day_rolling',
+                  'Technology','Blockchain','Economy_Monetary','IPO',
+                  'Retail_Wholesale','Financial_Markets','Manufacturing',
+                  'Real_Estate','Finance','Life_Sciences','Earnings',
+                  'Mergers','Energy','Economy_Fiscal','Economy_Macro',
+                  'sentiment_labels_Bullish','sentiment_labels_Bearish',
+                  'sentiment_labels_Neutral','sentiment_labels_Somewhat-Bullish',
+                  'sentiment_labels_Somewhat-Bearish','average_sentiment',
                   'market_open', 'market_high','market_low', 'market_close',
                   'market_volume','market_twenty_roll']
 
@@ -46,6 +72,73 @@ class Model_Builder:
 
         self.best_model = None
         self.best_mse = None
+
+
+    def prep_data(self):
+        copy = self.df.copy()
+
+        print(copy.shape)
+        copy.dropna(inplace=True)
+        print(copy.shape)
+
+        X = copy[self.X_no_target]
+        y = copy['Target']
+
+        scaler = StandardScaler()
+
+        # Fit the scaler on the training data
+        scaler.fit(X)
+        X_scaled = scaler.transform(X)
+        X_scaled = pd.DataFrame(X_scaled)
+
+#        X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=random_state)
+
+        self.y_train = y.iloc[:-20]
+
+        self.y_test = y.iloc[-20:]
+
+        self.x_train = X_scaled.iloc[:-20]
+
+        self.x_test = X_scaled.iloc[-20:]
+
+
+
+
+    def build_rf(self):
+
+        model = RandomForestRegressor(random_state=42)
+
+
+
+        param_grid = {
+            'n_estimators': [100, 200, 300],
+            'max_depth': [None, 10, 20, 30],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4],
+            'max_features': ['auto', 'sqrt', 'log2']
+        }
+
+        grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1, scoring='neg_mean_squared_error')
+        grid_search.fit(self.x_train, self.y_train)
+
+        best_params = grid_search.best_params_
+        best_model = grid_search.best_estimator_
+
+
+        y_pred = best_model.predict(self.x_test)
+        mse = mean_squared_error(self.y_test, y_pred)
+        print(f"Best Model Parameters: {best_params}")
+        print(f"Test Mean Squared Error: {mse}")
+
+
+        #model.fit(self.x_train, self.y_train)
+        #y_pred = model.predict(self.x_test)
+        #print()
+        #mse = mean_squared_error(self.y_test, y_pred)
+        #print('MSE: ', mse)
+
+
+
 
 
     def train_test_scale(self):
@@ -61,10 +154,10 @@ class Model_Builder:
         print('Train shape: ', train.shape)
         print('Test shape: ', test.shape)
 
-        X_train = train[self.X].values
+        X_train = train[self.X_no_target].values
         Y_train = train['Target'].values
 
-        X_test = test[self.X].values
+        X_test = test[self.X_no_target].values
         Y_test = test['Target'].values
 
         # Convert to numpy arrays
@@ -97,9 +190,9 @@ class Model_Builder:
     def build_and_optimize_models(self):
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         epochs = [100]
-        lstm_units1 = [2]
-        lstm_units2 = [2]
-        lstm_units3 = [128]
+        lstm_units1 = [8,64]
+        lstm_units2 = [8,64]
+        lstm_units3 = [8,64]
         input_shape = (1, 35)
 
         model = Sequential()
@@ -157,3 +250,17 @@ class Model_Builder:
 
     def return_best_mse(self):
         return self.best_mse
+
+
+
+
+
+
+
+
+
+
+
+
+
+
