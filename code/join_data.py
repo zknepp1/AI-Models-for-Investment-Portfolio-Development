@@ -12,28 +12,20 @@ class Join_Data:
         self.news_df = news_data
         self.dates = None
         self.market_df = self.pop_market_df()
-
         self.combined_dfs = self.combine_dataframes()
-
 
         self.dfs_with_timesteps = []
 
+      # Returns the joined data
       def return_df(self):
         return self.combined_dfs
 
-
+      # Pops the last entry of a list and returns it as a dataframe. The last entry should always be the market
       def pop_market_df(self):
         # Remove the last item which is the sp500
         market_copy = self.financial_df.pop()
-        #print('hello from the pop market function!!!!!!!!!!!!!!!!!!!')
-        #print('now presenting the market copy: :)')
-        #print(market_copy)
         date_pattern = r'\d\d\d\d-\d\d-\d\d'
         dates = market_copy['date']
-
-        #print('here are the dates!!!!!!!!!!!!!!!!!!!!!!!!')
-
-        #print(dates)
         new_dates = []
 
         for i in dates:
@@ -55,16 +47,14 @@ class Join_Data:
                            'market_volume': market_volume,
                            'market_twenty_roll': market_twenty_roll})
 
-        #print('This is what the pop market function returns????')
-        #print(df)
         return df
 
 
-
+      # This function makes 2 joins
+      # The first join is the ticker and the market
+      # the  second join is the ticker/market with its corresponding news data
       def combine_dataframes(self):
-        # Join based on index
         dfs = []
-
         for df in self.financial_df:
           date_pattern = r'\d\d\d\d-\d\d-\d\d'
           dates = df['date']
@@ -78,20 +68,13 @@ class Join_Data:
         for df in self.financial_df:
           two_df = pd.merge(df, self.market_df, on='clean_dates', how='outer')
 
-          #print('first merge!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-          #print(two_df.head(30))
-          #print(two_df.tail(30))
-
-
           merged_df = two_df.merge(self.news_df[count], on='clean_dates', how='right')
-          #print('second merge!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-          #print(merged_df.head(30))
-          #print(merged_df.tail(30))
+
           count += 1
           dfs.append(merged_df)
         return dfs
 
-
+      # Makes time steps, but im not using this anymore
       def loop_time_step_creation(self):
         for df in self.combined_dfs:
           ts_df = self.make_time_steps(df)
