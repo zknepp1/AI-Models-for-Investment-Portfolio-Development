@@ -13,12 +13,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import statistics
-
-
-#from ast import Match
 from datetime import datetime
-
-
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
@@ -36,9 +31,10 @@ pd.set_option('display.max_rows', None)  # Display all columns
 # The packages used for this class is pynytimes
 class News_Collector:
     def __init__(self, tics):
-
+        # Tickers
         self.tickers = tics
 
+        # Dates to search
 
         self.from_ = ['20220201T0000','20220301T0000','20220401T0000',
                       '20220501T0000','20220601T0000','20220701T0000','20220801T0000',
@@ -59,12 +55,7 @@ class News_Collector:
         self.mode_data = self.loop_through_mode_of_labels()
         self.sentiment_data = self.loop_through_average_sentiment()
 
-        #self.clean_news_data = self.clean_news_data()
-        #self.clusters = self.cluster_news()
-        #self.sentiment = self.calculate_sentiment()
-        #self.count_data = self.look_for_words()
-
-    # Collects all news data since the year 2000
+    # Collects all news data from alphavantage and then aggregates by date
     def collect_all_news(self):
         base_url = 'https://www.alphavantage.co/query?'
         function = 'NEWS_SENTIMENT'
@@ -110,7 +101,6 @@ class News_Collector:
             combined_df = pd.concat([combined_df, i])
           combined_list.append(combined_df)
 
-
         agg_dict = {
             'title': list,
             'summary': list,
@@ -127,7 +117,7 @@ class News_Collector:
 
         return grouped_df_list
 
-
+   #loops through count_topics
     def loop_through_count_topics(self):
         dfs_with_topics = []
         for df in self.news_data:
@@ -135,7 +125,7 @@ class News_Collector:
           dfs_with_topics.append(tdf)
         return dfs_with_topics
 
-
+    # Counts the topics found in the news data
     def count_topics(self, df):
         topix = df['topics']
         print(len(topix))
@@ -240,7 +230,7 @@ class News_Collector:
         return copy
 
 
-
+    # loops through mode_of_labels
     def loop_through_mode_of_labels(self):
         dfs_list = []
         count = 0
@@ -249,11 +239,10 @@ class News_Collector:
           df_modes['ticker'] = self.tickers[count]
           dfs_list.append(df_modes)
           count += 1
-
         return dfs_list
 
 
-
+    # Finds the mode of the sentiment labels
     def mode_of_labels(self, df):
         copy = df.copy()
         sentlabels = df['overall_sentiment_label']
@@ -262,28 +251,25 @@ class News_Collector:
           labels.append(statistics.mode(i))
 
         copy['sentiment_labels'] = labels
-        # Convert 'Category' column into binary variables
         copy = pd.get_dummies(copy, columns=['sentiment_labels'], prefix=['sentiment_labels'])
         copy['sentiment_labels_Bullish'] = copy['sentiment_labels_Bullish'].astype(int)
         copy['sentiment_labels_Bearish'] = copy['sentiment_labels_Bearish'].astype(int)
         copy['sentiment_labels_Neutral'] = copy['sentiment_labels_Neutral'].astype(int)
         copy['sentiment_labels_Somewhat-Bearish'] = copy['sentiment_labels_Somewhat-Bearish'].astype(int)
         copy['sentiment_labels_Somewhat-Bullish'] = copy['sentiment_labels_Somewhat-Bullish'].astype(int)
-
         return copy
 
 
-
+    # loops through average_sentiment
     def loop_through_average_sentiment(self):
         dfs_list = []
         for df in self.mode_data:
           df_sent = self.average_sentiment(df)
           dfs_list.append(df_sent)
-
         return dfs_list
 
 
-
+    # Averages the sentiment found in the news data
     def average_sentiment(self, df):
         copy = df.copy()
         sentiment = copy['overall_sentiment_score']
@@ -297,13 +283,13 @@ class News_Collector:
 
 
 
-    # Saves the dataframe locally
+    # Not used. I save the data as a whole later
     def save_all_news_data(self):
         df = pd.DataFrame({'dt': self.dt, 'headline': self.headline, 'snippet': self.snippet})
         df.to_csv('/content/drive/My Drive/news/newsdata.csv')
         print('Saved data to newsdata.csv')
 
-
+    # returns the complete df
     def return_news_data(self):
         return self.sentiment_data
 
