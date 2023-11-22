@@ -2,14 +2,14 @@ import pandas as pd
 import re
 
 from dataframe_collector import DataFrameCollection
-from news_collecter import News_Collector
+#from news_collecter import News_Collector
 
 
 
 class Join_Data:
-      def __init__(self, financial_data, news_data):
+      def __init__(self, financial_data):
         self.financial_df = financial_data
-        self.news_df = news_data
+        #self.news_df = news_data
         self.dates = None
         self.market_df = self.pop_market_df()
         self.combined_dfs = self.combine_dataframes()
@@ -68,10 +68,10 @@ class Join_Data:
         for df in self.financial_df:
           two_df = pd.merge(df, self.market_df, on='clean_dates', how='outer')
 
-          merged_df = two_df.merge(self.news_df[count], on='clean_dates', how='right')
+          #merged_df = two_df.merge(self.news_df[count], on='clean_dates', how='right')
 
           count += 1
-          dfs.append(merged_df)
+          dfs.append(two_df)
         return dfs
 
       # Makes time steps, but im not using this anymore

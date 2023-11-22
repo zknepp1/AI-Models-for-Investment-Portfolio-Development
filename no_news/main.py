@@ -25,10 +25,10 @@ import re
 import os
 import glob
 
-#from dataframe_collector import DataFrameCollection
+from dataframe_collector import DataFrameCollection
 #from news_collecter import News_Collector
 #from news_cleanup import Text_Cleaner
-#from join_data import Join_Data
+from join_data import Join_Data
 from model_builder import Model_Builder
 #from simulation import Investment_Manager
 
@@ -111,11 +111,14 @@ def check_folder_existence(folder_path):
 
 
 
-#tics = ['INTC','XEL','NEE','DD','MOS','BA',
-#        'MMM','DAL','CME','TRV','V','HSY','K',
-#        'PEP','SBUX','NFLX','JNJ','XOM','COP','^GSPC']
+tics = ['TRV','V','HSY','K',
+        'PEP','SBUX','NFLX','JNJ','XOM','COP','^GSPC']
 
-tics = ['BA', '^GSPC']
+
+labels = ['TRV','V','HSY','K',
+        'PEP','SBUX','NFLX','JNJ','XOM','COP']
+
+#tics = ['BA', '^GSPC']
 
 tics_no_market = tics[:-1]
 
@@ -138,42 +141,17 @@ train_csv_files = glob.glob(os.path.join(data_path, train_file_pattern))
 sim_csv_files = glob.glob(os.path.join(data_path, sim_file_pattern))
 
 
-train_dfs = []
-for file in train_csv_files:
-    df = pd.read_csv(file)
-    train_dfs.append(df)
-
-
-sim_dfs = []
-for file in sim_csv_files:
-    df = pd.read_csv(file)
-    sim_dfs.append(df)
-
-
-
-print(train_dfs[0]['stock'])
-print(train_dfs[1]['stock'])
-print(train_dfs[2]['stock'])
-print(train_dfs[3]['stock'])
-print(train_dfs[4]['stock'])
-print(train_dfs[5]['stock'])
-
-
-print()
-print()
-print()
-print()
-
-#print(sim_dfs[0])
-
-for_modeling = [train_dfs[1], train_dfs[5]]
-labels = ['INTC', 'MOS']
 
 # Pulling financial data between these dates
-#start = '2022-1-1'
-#end = '2023-10-22'
-#fin = DataFrameCollection(tics, start, end)
-#financials = fin.financial_data
+start = '2022-1-1'
+end = '2023-11-22'
+fin = DataFrameCollection(tics, start, end)
+financials = fin.financial_data
+
+
+#print(financials[0])
+
+
 
 # pulling news data
 #collector = News_Collector(tics_no_market)
@@ -181,16 +159,34 @@ labels = ['INTC', 'MOS']
 #print(news_data[0].head())
 
 # Joining the ticker data with market data and news data
-#join = Join_Data(financials, news_data)
-#df_list = join.return_df()
+join = Join_Data(financials)
+df_list = join.return_df()
+
+
+print(df_list[0])
 
 
 # Model building and data/model storage
+
+
 list_of_models = []
 list_of_mse = []
 count = 0
-for train_df in for_modeling:
+for df in df_list:
   # Building model
+
+  # train df used to train the models
+  # sim df used for simulation and future prediction
+  train_df = df.iloc[:-25]
+  sim_df = df.iloc[-25:]
+
+  train_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) + '_train_df.csv', index=False)
+  sim_df.to_csv('/home/zacharyknepp2012/Knepp_OUDSA5900/data/'+ str(tics[count]) +'_sim_df.csv', index=False)
+
+  print('Train df dimensions: ', train_df.shape)
+  print(train_df.head())
+
+
   builder = Model_Builder(train_df)
   builder.train_test_scale()
   builder.build_and_optimize_models()

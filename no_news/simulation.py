@@ -143,12 +143,30 @@ class Investment_Manager:
         lp_problem += pulp.lpSum([self.final_df.at[i, 'return'] * shares_to_buy[self.final_df.at[i, 'ticker']] for i in self.final_df.index])
 
         # Conrstraints
-        total_budget = 5000
+        total_budget = 10000
         lp_problem += pulp.lpSum([self.final_df.at[i, 'open'] * shares_to_buy[self.final_df.at[i, 'ticker']] for i in self.final_df.index]) <= total_budget
         risk_free_rate = 0.001
         min_sharpe_ratio = 0.1
-        max_concentration = 0.05
+        max_concentration = 0.2
         lp_problem += pulp.lpSum([(self.final_df.at[i, 'return'] - risk_free_rate) * shares_to_buy[self.final_df.at[i, 'ticker']] / self.final_df.at[i, 'std'] for i in self.final_df.index]) >= min_sharpe_ratio
+
+        for ticker in self.final_df['ticker']:
+          # Find the row where the 'ticker' column matches the current ticker
+          stock_row = self.final_df[self.final_df['ticker'] == ticker]
+
+          # Now you can safely access the 'open' value
+          open_price = stock_row['open'].iloc[0]  # Assuming each ticker appears only once
+
+          # Add the constraint
+          lp_problem += shares_to_buy[ticker] * open_price <= max_concentration * total_budget
+
+
+
+
+
+
+
+
 
         # Solve the linear programming problem
         lp_problem.solve()
@@ -165,8 +183,8 @@ class Investment_Manager:
 
 print('hello world')
 
-#tickers = ['INTC','XEL','NEE','DD','MOS','BA','MMM','DAL','CME','TRV','V','HSY','K','PEP','SBUX','NFLX','JNJ','XOM','COP']
-tickers = ['INTC','MOS']
+tickers = ['INTC','XEL','NEE','DD','MOS','BA','MMM','DAL','CME','TRV','V','HSY','K','PEP','SBUX','NFLX','JNJ','XOM','COP']
+
 l = Investment_Manager(tickers)
 l.maximize_returns()
 
