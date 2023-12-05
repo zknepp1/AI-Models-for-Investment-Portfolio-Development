@@ -21,7 +21,11 @@ The code in this project is divided up between the folders "no_news" and "with_n
 
 Once the main program is executed, the program will ask the user for a list of stocks to put in the algorithmic trader.
 Please keep in mind that the model building process is very time consuming. Make sure your machine has plenty of memory.
+
 ![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/1132876f-4271-41d9-8cf2-5ed06b641eb6)
+
+
+Enter the stock labels one-by-one in all CAPS. When you are finished entering the stocks, type "EXIT"
 
 ![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/e4423011-d485-47cb-810b-ee996ee1a2a4)
 
