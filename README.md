@@ -25,12 +25,23 @@ Please keep in mind that the model building process is very time consuming. Make
 ![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/1132876f-4271-41d9-8cf2-5ed06b641eb6)
 
 
+
+
 Enter the stock labels one-by-one in all CAPS. When you are finished entering the stocks, type "EXIT"
 
 ![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/e4423011-d485-47cb-810b-ee996ee1a2a4)
 
 
+
+
+If the data is entered correctly, the data is collected and the modeling process has begun.
+
 ![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/ee4e17d8-cf8b-4596-a802-0166402f983b)
+
+
+
+
+Please wait till the program has finished executing and the program will spit out a suggested portfolio.
 
 
 # Issues and Limitations
