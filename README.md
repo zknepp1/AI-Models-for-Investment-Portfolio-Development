@@ -19,5 +19,8 @@ The code in this project is divided up between the folders "no_news" and "with_n
 
 # How to Use
 
+![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/1132876f-4271-41d9-8cf2-5ed06b641eb6)
+
+
 
 # Issues and Limitations
