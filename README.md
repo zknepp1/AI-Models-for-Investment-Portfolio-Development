@@ -42,6 +42,11 @@ If the data is entered correctly, the data is collected and the modeling process
 
 
 Please wait till the program has finished executing and the program will spit out a suggested portfolio.
+The below image is an example of the program, run on the stock labels: MOS and MMM
+
+![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/f1660dba-4f1f-469a-8b0e-a3bcaa7a5c2f)
+
+
 
 
 # Issues and Limitations
