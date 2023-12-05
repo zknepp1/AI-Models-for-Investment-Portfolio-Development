@@ -151,13 +151,10 @@ class Investment_Manager:
         lp_problem += pulp.lpSum([(self.final_df.at[i, 'return'] - risk_free_rate) * shares_to_buy[self.final_df.at[i, 'ticker']] / self.final_df.at[i, 'std'] for i in self.final_df.index]) >= min_sharpe_ratio
 
         for ticker in self.final_df['ticker']:
-          # Find the row where the 'ticker' column matches the current ticker
           stock_row = self.final_df[self.final_df['ticker'] == ticker]
+          open_price = stock_row['open'].iloc[0] 
 
-          # Now you can safely access the 'open' value
-          open_price = stock_row['open'].iloc[0]  # Assuming each ticker appears only once
-
-          # Add the constraint
+          #FOR EACH STOCK, Add constraint
           lp_problem += shares_to_buy[ticker] * open_price <= max_concentration * total_budget
 
 
@@ -181,7 +178,7 @@ class Investment_Manager:
 
 
 
-#print('hello world')
+# EXAMPLE CODE
 
 #tickers = ['INTC','XEL','NEE','DD','MOS','BA','MMM','DAL','CME','TRV','V','HSY','K','PEP','SBUX','NFLX','JNJ','XOM','COP']
 #tickers = ['MSFT','PAYC']
