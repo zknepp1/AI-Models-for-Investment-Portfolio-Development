@@ -84,7 +84,7 @@ class DataFrameCollection:
 
 
 
-
+# EXAMPLE CODE
 #tics = ['AMD', '^GSPC']
 #start = '2020-1-1'
 #end = '2023-6-1'
