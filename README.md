@@ -45,3 +45,11 @@ Please wait till the program has finished executing and the program will spit ou
 
 
 # Issues and Limitations
+This biggest issues encountered in this project is time constraints, hardware constraints, and switching news datasets mid project.
+
+
+
+
+
+
+
