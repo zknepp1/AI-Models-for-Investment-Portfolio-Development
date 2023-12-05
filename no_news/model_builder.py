@@ -21,7 +21,6 @@ from tensorflow.keras.callbacks import EarlyStopping
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-#import matplotlib.pyplot as plt
 from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 from tensorflow.keras.layers import GRU, Dense
 
@@ -128,32 +127,10 @@ class Model_Builder:
         print(X.shape)
         print(Y.shape)
 
-
-        #train = copy.iloc[:-20]
-        #test = copy.iloc[-20:]
-
-        #X_train = train[self.X_no_target].values
-        #Y_train = train['Target'].values
-        #X_test = test[self.X_no_target].values
-        #Y_test = test['Target'].values
-
-        #x_train_nn = np.array(X_train)
-        #y_train_nn = np.array(Y_train)
-        #x_test_nn = np.array(X_test)
-        #y_test_nn = np.array(Y_test)
-        #self.y_train_nn = y_train_nn
-        #self.y_test_nn = y_test_nn
-
         scaler = StandardScaler()
         scaler.fit(X)
 
         X_scaled = scaler.transform(X)
-
-
-
-        #X_train_scaled = scaler.transform(x_train_nn)
-        #X_test_scaled = scaler.transform(x_test_nn)
-
         m = 14
         timesteps = 1
 
@@ -166,7 +143,6 @@ class Model_Builder:
         epochs = [100]
         lstm_units1 = [8,64]
         lstm_units2 = [8,64]
-        #lstm_units3 = [8,64]
         input_shape = (1, 14)
 
 
@@ -196,9 +172,6 @@ class Model_Builder:
                   model.add(Dropout(0.2))
                   model.add(LSTM(units=lstm_unit2, return_sequences=True))
                   model.add(Dropout(0.2))
-                  #model.add(LSTM(units=lstm_unit3, return_sequences=True))
-                  #model.add(Dropout(0.2))
-                  model.add(Dense(units=100, activation='swish'))
                   model.add(Dense(units=1, activation='swish'))# the output layer
                   model.compile(optimizer='Adam', loss='mean_squared_error')
                   hist = model.fit(x_train_fold, y_train_fold, epochs=100, validation_data=(x_val_fold, y_val_fold), batch_size=1, verbose=1, callbacks=[early_stopping])
