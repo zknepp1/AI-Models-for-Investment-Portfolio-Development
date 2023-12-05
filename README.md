@@ -19,8 +19,14 @@ The code in this project is divided up between the folders "no_news" and "with_n
 
 # How to Use
 
+Once the main program is executed, the program will ask the user for a list of stocks to put in the algorithmic trader.
+Please keep in mind that the model building process is very time consuming. Make sure your machine has plenty of memory.
 ![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/1132876f-4271-41d9-8cf2-5ed06b641eb6)
 
+![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/e4423011-d485-47cb-810b-ee996ee1a2a4)
+
+
+![image](https://github.com/zknepp1/Knepp_OUDSA5900/assets/41703755/ee4e17d8-cf8b-4596-a802-0166402f983b)
 
 
 # Issues and Limitations
