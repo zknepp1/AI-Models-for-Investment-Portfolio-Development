@@ -60,7 +60,7 @@ class Investment_Manager:
         for df in self.data_list:
           print(df.shape)
           X = df[self.vars]
-
+          print(X)
           X = X.dropna()
           X_array = np.array(X)
 
@@ -181,10 +181,10 @@ class Investment_Manager:
 
 
 
-print('hello world')
+#print('hello world')
 
-tickers = ['INTC','XEL','NEE','DD','MOS','BA','MMM','DAL','CME','TRV','V','HSY','K','PEP','SBUX','NFLX','JNJ','XOM','COP']
-
-l = Investment_Manager(tickers)
-l.maximize_returns()
+#tickers = ['INTC','XEL','NEE','DD','MOS','BA','MMM','DAL','CME','TRV','V','HSY','K','PEP','SBUX','NFLX','JNJ','XOM','COP']
+#tickers = ['MSFT','PAYC']
+#l = Investment_Manager(tickers)
+#l.maximize_returns()
 

@@ -1,8 +1,8 @@
-
+import time
 import numpy as np
 import pandas as pd
 pd.set_option('display.max_columns', None)  # Display all columns
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from datetime import datetime
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import precision_score
@@ -25,12 +25,17 @@ import re
 import os
 import glob
 
+import warnings
+warnings.filterwarnings("ignore")
+
+
+
 from dataframe_collector import DataFrameCollection
 #from news_collecter import News_Collector
 #from news_cleanup import Text_Cleaner
 from join_data import Join_Data
 from model_builder import Model_Builder
-#from simulation import Investment_Manager
+from simulation import Investment_Manager
 
 #function to Check if the folder exists, and if not, create it
 def check_folder_existence(folder_path):
@@ -99,28 +104,44 @@ def check_folder_existence(folder_path):
 # Communication Services
 # Comcast Corporation: CMCSA
 # Roku, Inc.: ROKU
-# Activision Blizzard, Inc.: ATVI
+# Activision Blizzard
 
 
 
-#tics = ['XOM','CVX','COP','JNJ','CVS','UNH',
-#        'GOOGL','IBM','AMZN','NFLX','SBUX','MAR',
-#        'PEP','K','HSY','V','TRV','CME','BA','MMM','DAL',
-#        'SHW','DD','MOS','ARE','EXR','HST',
-#        'NEE','XEL','PPL','CMCSA','ROKU','ATVI','^GSPC']
+print('###############################################################')
+print('###############################################################')
+
+print()
+print()
+print('Hello User')
+print()
+print('This program takes stock labels and will make recomendations on which stocks and how many of which stock to buy')
+print('Keep in mind that each model takes about 20 minutes to build.')
+
+
+user_inputs = []
+
+while True:
+    user_input = input("Please enter a stock label (or type 'exit' to finish): ")
+    if user_input.lower() == 'exit':
+        break
+    user_inputs.append(user_input)
+
+print("You entered:", user_inputs)
 
 
 
-tics = ['TRV','V','HSY','K',
-        'PEP','SBUX','NFLX','JNJ','XOM','COP','^GSPC']
+tics = user_inputs
+tics.append('^GSPC')
 
 
-labels = ['TRV','V','HSY','K',
-        'PEP','SBUX','NFLX','JNJ','XOM','COP']
 
-#tics = ['BA', '^GSPC']
+labels = tics[:-1]
 
-tics_no_market = tics[:-1]
+
+# Start timing the program
+start_time = time.time()
+
 
 
 
@@ -135,35 +156,36 @@ check_folder_existence(models_path)
 
 
 
-train_file_pattern = '*_train_df.csv'
-sim_file_pattern = '*_sim_df.csv'
-train_csv_files = glob.glob(os.path.join(data_path, train_file_pattern))
-sim_csv_files = glob.glob(os.path.join(data_path, sim_file_pattern))
+#train_file_pattern = '*_train_df.csv'
+#sim_file_pattern = '*_sim_df.csv'
+#train_csv_files = glob.glob(os.path.join(data_path, train_file_pattern))
+#sim_csv_files = glob.glob(os.path.join(data_path, sim_file_pattern))
 
 
+
+
+
+current_date = datetime.now().strftime("%Y-%m-%d")
+print(current_date)
 
 # Pulling financial data between these dates
 start = '2022-1-1'
-end = '2023-11-22'
+end = current_date
 fin = DataFrameCollection(tics, start, end)
 financials = fin.financial_data
 
 
-#print(financials[0])
 
 
 
-# pulling news data
-#collector = News_Collector(tics_no_market)
-#news_data = collector.return_news_data()
-#print(news_data[0].head())
+
 
 # Joining the ticker data with market data and news data
 join = Join_Data(financials)
 df_list = join.return_df()
 
 
-print(df_list[0])
+#print(df_list[0])
 
 
 # Model building and data/model storage
@@ -199,11 +221,18 @@ for df in df_list:
   list_of_mse.append(mse)
   count += 1
 
+# end timing the program
+end_time = time.time()
 
 
+
+
+l = Investment_Manager(labels)
+l.maximize_returns()
+
+execution_time = end_time - start_time  # Calculate the execution time
+print("Execution time: {:.2f} seconds".format(execution_time))
 
 print('THE PROGRAM HAS FINISHED EXECUTING! HAVE A NICE DAY')
-
-
 
 
