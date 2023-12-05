@@ -11,6 +11,10 @@ The code in this project is divided up between the folders "no_news" and "with_n
 # Installation Instructions
 
 1. Clone repo into local directory.
+2. Move to directory with: "cd Knepp_OUDSA5900"
+3. Activate virtual environment: "source venv/bin/activate"
+4. Install the necessary packages: "pip install -r requirements.txt"
+5. Run the main file in the no_news folder: "python3 no_news/main.py"
 
 
 # How to Use
