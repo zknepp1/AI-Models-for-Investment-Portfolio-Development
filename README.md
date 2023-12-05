@@ -50,7 +50,7 @@ The below image is an example of the program, run on the stock labels: MOS and M
 
 
 # Issues and Limitations
-This biggest issues encountered in this project is time constraints, hardware constraints, and switching news datasets mid project.
+This biggest issues encountered in this project is time constraints, hardware constraints, and switching news datasets mid project. Depending on the hardware on the user's machine the program may face difficulty with training time for the models. I have tested that upward of 15 stock labels will cause the program to crash due to limited RAM. To get the results for the project, I simply divided the stock label work load into multiple sessions.
 
 
 
