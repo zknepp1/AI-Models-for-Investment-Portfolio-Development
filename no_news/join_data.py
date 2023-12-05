@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 from dataframe_collector import DataFrameCollection
-#from news_collecter import News_Collector
+
 
 
 
@@ -50,9 +50,8 @@ class Join_Data:
         return df
 
 
-      # This function makes 2 joins
+      # This function makes 1 join
       # The first join is the ticker and the market
-      # the  second join is the ticker/market with its corresponding news data
       def combine_dataframes(self):
         dfs = []
         for df in self.financial_df:
@@ -65,11 +64,9 @@ class Join_Data:
           df['clean_dates'] = new_dates
 
         count = 0
+        # JOIN ALL THE DATA
         for df in self.financial_df:
           two_df = pd.merge(df, self.market_df, on='clean_dates', how='outer')
-
-          #merged_df = two_df.merge(self.news_df[count], on='clean_dates', how='right')
-
           count += 1
           dfs.append(two_df)
         return dfs
@@ -84,6 +81,7 @@ class Join_Data:
 
 
 
+# EXAMPLE CODE
 
 #tics = ['AMD', '^GSPC']
 #start = '2020-1-1'
@@ -92,8 +90,6 @@ class Join_Data:
 #financials = fin.financial_data
 
 
-
-# EXAMPLE CODE
 #collector = News_Collector(2020, 2022, 9)
 #news_data = collector.return_news_data()
 
